@@ -1,5 +1,7 @@
 import express, { Router } from 'express';
 import { config } from './config.js';
+import { sql } from 'kysely';
+import { db } from './db/index.js';
 import { errorHandler, notFoundHandler } from './middleware/error-handler.js';
 import { version } from './lib/version.js';
 
@@ -12,8 +14,13 @@ export function createApp() {
 
   // Infra endpoints stay outside the request logger and metrics.
   const infra = Router();
-  infra.get('/health', (_req, res) => {
-    res.json({ status: 'ok', version: version });
+  infra.get('/health', async (_req, res) => {
+    try {
+      await sql`select 1`.execute(db);
+      res.json({ status: 'ok', version: version });
+    } catch {
+      res.status(503).json({ status: 'unavailable' });
+    }
   });
   app.use(infra);
 
