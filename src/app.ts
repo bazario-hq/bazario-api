@@ -3,6 +3,8 @@ import { config } from './config.js';
 import { sql } from 'kysely';
 import { db } from './db/index.js';
 import { errorHandler, notFoundHandler } from './middleware/error-handler.js';
+import { generateOpenApiDocument } from './openapi/registry.js';
+import { apiRouter } from './routes.js';
 import { version } from './lib/version.js';
 
 export function createApp() {
@@ -22,9 +24,14 @@ export function createApp() {
       res.status(503).json({ status: 'unavailable' });
     }
   });
+  infra.get('/openapi.json', (_req, res) => {
+    res.json(generateOpenApiDocument(version));
+  });
   app.use(infra);
 
   app.use(express.json({ limit: '1mb' }));
+
+  app.use('/api', apiRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);
