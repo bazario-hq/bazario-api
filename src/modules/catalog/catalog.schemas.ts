@@ -84,4 +84,30 @@ export const ProductSearchResponse = registry.register(
   }),
 );
 
+export const ProductDetail = registry.register(
+  'ProductDetail',
+  z.object({
+    id: z.number().int(),
+    name: z.string(),
+    slug: z.string(),
+    description: z.string(),
+    priceCents: z.number().int(),
+    compareAtCents: z.number().int().nullable(),
+    currency: z.string(),
+    stock: z.number().int(),
+    status: z.enum(['draft', 'active', 'archived']),
+    specs: z.record(z.string()),
+    ratingAvg: z.number(),
+    ratingCount: z.number().int(),
+    ratingHistogram: z.record(z.number().int()).openapi({ example: { '5': 12, '4': 3, '3': 0, '2': 1, '1': 0 } }),
+    images: z.array(ImageSchema),
+    seller: SellerSummary.extend({ ratingAvg: z.number().nullable() }),
+    category: CategoryRef,
+    breadcrumb: z.array(CategoryRef),
+    related: z.array(ProductCard),
+    inWishlist: z.boolean(),
+    publishedAt: z.string().nullable(),
+  }),
+);
+
 export const SlugParams = z.object({ slug: z.string().min(1) });

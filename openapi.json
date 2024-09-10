@@ -439,6 +439,138 @@
           "meta",
           "facets"
         ]
+      },
+      "ProductDetail": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "priceCents": {
+            "type": "integer"
+          },
+          "compareAtCents": {
+            "type": "integer",
+            "nullable": true
+          },
+          "currency": {
+            "type": "string"
+          },
+          "stock": {
+            "type": "integer"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "active",
+              "archived"
+            ]
+          },
+          "specs": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "ratingAvg": {
+            "type": "number"
+          },
+          "ratingCount": {
+            "type": "integer"
+          },
+          "ratingHistogram": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "example": {
+              "1": 0,
+              "2": 1,
+              "3": 0,
+              "4": 3,
+              "5": 12
+            }
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Image"
+            }
+          },
+          "seller": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SellerSummary"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "ratingAvg": {
+                    "type": "number",
+                    "nullable": true
+                  }
+                },
+                "required": [
+                  "ratingAvg"
+                ]
+              }
+            ]
+          },
+          "category": {
+            "$ref": "#/components/schemas/CategoryRef"
+          },
+          "breadcrumb": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CategoryRef"
+            }
+          },
+          "related": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductCard"
+            }
+          },
+          "inWishlist": {
+            "type": "boolean"
+          },
+          "publishedAt": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "description",
+          "priceCents",
+          "compareAtCents",
+          "currency",
+          "stock",
+          "status",
+          "specs",
+          "ratingAvg",
+          "ratingCount",
+          "ratingHistogram",
+          "images",
+          "seller",
+          "category",
+          "breadcrumb",
+          "related",
+          "inWishlist",
+          "publishedAt"
+        ]
       }
     },
     "parameters": {}
@@ -769,6 +901,52 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/products/{id}": {
+      "get": {
+        "summary": "Product detail",
+        "tags": [
+          "Catalog"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true,
+              "example": 42
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Product",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductDetail"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
           }
         }
       }

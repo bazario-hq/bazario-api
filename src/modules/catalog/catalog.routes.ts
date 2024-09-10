@@ -40,3 +40,18 @@ route(
   },
   ({ query }) => productsService.search(query),
 );
+
+route(
+  catalogRouter,
+  '',
+  {
+    method: 'get',
+    path: '/products/{id}',
+    summary: 'Product detail',
+    tags: ['Catalog'],
+    auth: 'optional',
+    params: IdParams,
+    responses: { 200: { description: 'Product', schema: ProductDetail }, 404: { description: 'Not found' } },
+  },
+  ({ params, req }) => productsService.detail(params.id, req.user?.id),
+);

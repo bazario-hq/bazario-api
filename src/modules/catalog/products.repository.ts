@@ -83,6 +83,30 @@ export const productsRepository = {
   findById(id: number) {
     return db.selectFrom('products').selectAll().where('id', '=', id).executeTakeFirst();
   },
+
+  related(categoryId: number, excludeId: number, limit = 8) {
+    return db
+      .selectFrom('products')
+      .innerJoin('sellers', 'sellers.id', 'products.seller_id')
+      .selectAll('products')
+      .select(['sellers.store_name as seller_store_name', 'sellers.slug as seller_slug'])
+      .where('products.category_id', '=', categoryId)
+      .where('products.id', '!=', excludeId)
+      .where('products.status', '=', 'active')
+      .where('sellers.status', '=', 'active')
+      .orderBy('products.sales_count', 'desc')
+      .limit(limit)
+      .execute();
+  },
+
+  sellerRating(sellerId: number) {
+    return db
+      .selectFrom('products')
+      .select(sql<number | null>`round(avg(rating_avg) filter (where rating_count > 0), 2)`.as('rating'))
+      .where('seller_id', '=', sellerId)
+      .where('status', '=', 'active')
+      .executeTakeFirst();
+  },
 };
 
 export type ProductRow = Awaited<ReturnType<typeof productsRepository.search>>[number];

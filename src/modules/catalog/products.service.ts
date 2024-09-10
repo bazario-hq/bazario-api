@@ -58,4 +58,52 @@ export const productsService = {
       facets: { categories: facets.map((f) => ({ ...f, count: Number(f.count) })) },
     };
   },
+
+  async detail(id: number, userId?: number) {
+    const product = await productsRepository.findById(id);
+    if (!product || product.status !== 'active') throw notFound('Product');
+
+    const images = await productImagesRepository.forProduct(id);
+    const seller = await sellersRepository.findById(product.seller_id);
+    if (!seller || seller.status !== 'active') throw notFound('Product');
+    const sellerRating = await productsRepository.sellerRating(seller.id);
+    const breadcrumb = await categoriesService.breadcrumb(product.category_id);
+    const histogramRows = await productsRepository.ratingHistogram(id);
+    const relatedRows = await productsRepository.related(product.category_id, id);
+    const related = await toProductCards(relatedRows);
+    const inWishlist = userId ? Boolean(await productsRepository.inWishlist(userId, id)) : false;
+
+    const ratingHistogram: Record<string, number> = { '5': 0, '4': 0, '3': 0, '2': 0, '1': 0 };
+    for (const row of histogramRows) ratingHistogram[String(row.rating)] = Number(row.count);
+
+    const category = breadcrumb[breadcrumb.length - 1];
+
+    return {
+      id: product.id,
+      name: product.name,
+      slug: product.slug,
+      description: product.description,
+      priceCents: product.price_cents,
+      compareAtCents: product.compare_at_cents,
+      currency: product.currency,
+      stock: product.stock,
+      status: product.status,
+      specs: product.specs,
+      ratingAvg: product.rating_avg,
+      ratingCount: product.rating_count,
+      ratingHistogram,
+      images: images.map((img) => serializeImage({ ...img, variants: img.variants as ImageVariants })),
+      seller: {
+        id: seller.id,
+        storeName: seller.store_name,
+        slug: seller.slug,
+        ratingAvg: sellerRating?.rating ?? null,
+      },
+      category,
+      breadcrumb,
+      related,
+      inWishlist,
+      publishedAt: product.published_at ? product.published_at.toISOString() : null,
+    };
+  },
 };
