@@ -5,6 +5,7 @@ import { db } from './db/index.js';
 import { errorHandler, notFoundHandler } from './middleware/error-handler.js';
 import { generateOpenApiDocument } from './openapi/registry.js';
 import { apiRouter } from './routes.js';
+import { imagesRouter } from './modules/images/images.routes.js';
 import { version } from './lib/version.js';
 
 export function createApp() {
@@ -31,6 +32,7 @@ export function createApp() {
 
   app.use(express.json({ limit: '1mb' }));
 
+  app.use('/images', imagesRouter);
   app.use('/api', apiRouter);
 
   app.use(notFoundHandler);
