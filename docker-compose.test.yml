@@ -1,0 +1,15 @@
+# Postgres for the integration tests. Start with `npm run test:db`.
+services:
+  postgres-test:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: bazario
+      POSTGRES_PASSWORD: bazario
+      POSTGRES_DB: bazario_test
+    ports:
+      - "55432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bazario -d bazario_test"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
