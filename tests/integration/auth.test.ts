@@ -29,6 +29,33 @@ describe('auth', () => {
   describe('login', () => {
   });
 
+  describe('refresh tokens', () => {
+    it('rotates the refresh token and rejects reuse of the old one', async () => {
+      const user = await createUser();
+      const login = await api().post('/api/auth/login').send({ email: user.email, password: PASSWORD });
+      const first = login.body.refreshToken;
+
+      const refreshed = await api().post('/api/auth/refresh').send({ refreshToken: first });
+      expect(refreshed.status).toBe(200);
+      expect(refreshed.body.refreshToken).not.toBe(first);
+
+      const reused = await api().post('/api/auth/refresh').send({ refreshToken: first });
+      expect(reused.status).toBe(401);
+
+      const again = await api().post('/api/auth/refresh').send({ refreshToken: refreshed.body.refreshToken });
+      expect(again.status).toBe(200);
+    });
+
+    it('logout revokes the refresh token', async () => {
+      const user = await createUser();
+      const login = await api().post('/api/auth/login').send({ email: user.email, password: PASSWORD });
+      const out = await api().post('/api/auth/logout').send({ refreshToken: login.body.refreshToken });
+      expect(out.status).toBe(204);
+      const res = await api().post('/api/auth/refresh').send({ refreshToken: login.body.refreshToken });
+      expect(res.status).toBe(401);
+    });
+  });
+
   describe('profile', () => {
   });
 });

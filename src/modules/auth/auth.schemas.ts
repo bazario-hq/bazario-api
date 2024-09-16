@@ -12,6 +12,8 @@ export const LoginBody = z.object({
   password: z.string().min(1),
 });
 
+export const RefreshBody = z.object({ refreshToken: z.string().min(10) });
+
 export const MeSchema = registry.register(
   'Me',
   z.object({

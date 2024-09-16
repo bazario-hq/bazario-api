@@ -145,6 +145,23 @@ const authService = {
     return issueTokens(updated, userAgent);
   },
 
+  async refresh(refreshToken: string, userAgent: string | null) {
+    const tokenHash = hashToken(refreshToken);
+    const stored = await refreshTokensRepository.findActive(tokenHash);
+    if (!stored) throw unauthorized('Invalid refresh token');
+
+    const user = await usersRepository.findById(stored.user_id);
+    if (!user || user.status !== 'active') throw unauthorized('Invalid refresh token');
+
+    const revoked = await refreshTokensRepository.revoke(tokenHash);
+    if (Number(revoked.numUpdatedRows) === 0) throw unauthorized('Invalid refresh token');
+    return issueTokens(user, userAgent);
+  },
+
+  async logout(refreshToken: string) {
+    await refreshTokensRepository.revoke(hashToken(refreshToken));
+  },
+
   async me(userId: number) {
     const user = await usersRepository.findById(userId);
     if (!user) throw notFound('User');
@@ -183,6 +200,36 @@ route(
     responses: { 200: { description: 'Logged in', schema: AuthResponse }, 401: { description: 'Bad credentials' } },
   },
   ({ body, req }) => authService.login(body, req.get('user-agent') ?? null),
+);
+
+route(
+  authRouter,
+  mount,
+  {
+    method: 'post',
+    path: '/refresh',
+    summary: 'Exchange a refresh token for a new token pair',
+    tags,
+    body: RefreshBody,
+    responses: { 200: { description: 'New tokens', schema: AuthResponse }, 401: { description: 'Invalid token' } },
+  },
+  ({ body, req }) => authService.refresh(body.refreshToken, req.get('user-agent') ?? null),
+);
+
+route(
+  authRouter,
+  mount,
+  {
+    method: 'post',
+    path: '/logout',
+    summary: 'Revoke a refresh token',
+    tags,
+    body: RefreshBody,
+    responses: { 204: { description: 'Logged out' } },
+  },
+  async ({ body }) => {
+    await authService.logout(body.refreshToken);
+  },
 );
 
 route(
