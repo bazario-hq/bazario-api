@@ -34,6 +34,22 @@ export const categoriesService = {
     return buildTree(all, null);
   },
 
+  async detail(slug: string) {
+    const all = await categoriesRepository.all();
+    const category = all.find((c) => c.slug === slug);
+    if (!category) throw notFound('Category');
+    return {
+      id: category.id,
+      name: category.name,
+      slug: category.slug,
+      description: category.description,
+      breadcrumb: breadcrumbFor(all, category.id),
+      children: all
+        .filter((c) => c.parent_id === category.id)
+        .map((c) => ({ id: c.id, name: c.name, slug: c.slug })),
+    };
+  },
+
   /** Category ids for a slug, including every subcategory. */
   async idsForSlug(slug: string): Promise<number[] | null> {
     const all = await categoriesRepository.all();

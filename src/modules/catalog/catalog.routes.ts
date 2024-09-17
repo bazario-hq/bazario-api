@@ -32,6 +32,20 @@ route(
   '',
   {
     method: 'get',
+    path: '/categories/{slug}',
+    summary: 'A category with its breadcrumb and subcategories',
+    tags: ['Catalog'],
+    params: SlugParams,
+    responses: { 200: { description: 'Category', schema: CategoryDetail }, 404: { description: 'Not found' } },
+  },
+  ({ params }) => categoriesService.detail(params.slug),
+);
+
+route(
+  catalogRouter,
+  '',
+  {
+    method: 'get',
     path: '/products',
     summary: 'Search and browse products',
     tags: ['Catalog'],

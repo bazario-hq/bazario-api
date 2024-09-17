@@ -28,6 +28,18 @@ export const CategoryRef = registry.register(
   z.object({ id: z.number().int(), name: z.string(), slug: z.string() }),
 );
 
+export const CategoryDetail = registry.register(
+  'CategoryDetail',
+  z.object({
+    id: z.number().int(),
+    name: z.string(),
+    slug: z.string(),
+    description: z.string().nullable(),
+    breadcrumb: z.array(CategoryRef),
+    children: z.array(CategoryRef),
+  }),
+);
+
 export const ProductCard = registry.register(
   'ProductCard',
   z.object({
