@@ -6,6 +6,10 @@ describe('slugify', () => {
     expect(slugify('Handwoven Rug — Large (Blue)')).toBe('handwoven-rug-large-blue');
   });
 
+  it('strips accents', () => {
+    expect(slugify('Café Crème')).toBe('cafe-creme');
+  });
+
   it('trims leading and trailing separators and limits length', () => {
     expect(slugify('  --hello--  ')).toBe('hello');
     expect(slugify('x'.repeat(200))).toHaveLength(80);
