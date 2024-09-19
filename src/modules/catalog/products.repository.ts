@@ -84,6 +84,16 @@ export const productsRepository = {
     return db.selectFrom('products').selectAll().where('id', '=', id).executeTakeFirst();
   },
 
+  ratingHistogram(productId: number) {
+    return db
+      .selectFrom('reviews')
+      .select(['rating', (eb) => eb.fn.countAll<number>().as('count')])
+      .where('product_id', '=', productId)
+      .where('status', '=', 'published')
+      .groupBy('rating')
+      .execute();
+  },
+
   related(categoryId: number, excludeId: number, limit = 8) {
     return db
       .selectFrom('products')

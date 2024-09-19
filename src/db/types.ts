@@ -94,6 +94,17 @@ export interface ProductImagesTable {
   created_at: Generated<Date>;
 }
 
+export interface ReviewsTable {
+  id: Generated<number>;
+  product_id: number;
+  user_id: number;
+  rating: number;
+  title: string;
+  body: string;
+  created_at: Generated<Date>;
+  updated_at: Generated<Date>;
+}
+
 export interface Database {
   users: UsersTable;
   refresh_tokens: RefreshTokensTable;
@@ -101,6 +112,7 @@ export interface Database {
   sellers: SellersTable;
   products: ProductsTable;
   product_images: ProductImagesTable;
+  reviews: ReviewsTable;
 }
 
 export type User = Selectable<UsersTable>;
@@ -109,4 +121,5 @@ export type Seller = Selectable<SellersTable>;
 export type Product = Selectable<ProductsTable>;
 export type ProductUpdate = Updateable<ProductsTable>;
 export type ProductImage = Selectable<ProductImagesTable>;
+export type Review = Selectable<ReviewsTable>;
 export type Category = Selectable<CategoriesTable>;
