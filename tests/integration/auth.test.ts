@@ -24,6 +24,14 @@ describe('auth', () => {
       expect(me.status).toBe(200);
       expect(me.body.name).toBe('New Person');
     });
+
+    it('rejects a duplicate email regardless of case', async () => {
+      await createUser({ email: 'taken@example.test' });
+      const res = await api()
+        .post('/api/auth/signup')
+        .send({ email: 'TAKEN@example.test', password: 'long-enough-pw', name: 'Someone' });
+      expect(res.status).toBe(409);
+    });
   });
 
   describe('login', () => {
