@@ -689,6 +689,106 @@
           "items",
           "meta"
         ]
+      },
+      "Storefront": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "storeName": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "logoUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "memberSince": {
+            "type": "string"
+          },
+          "stats": {
+            "type": "object",
+            "properties": {
+              "productCount": {
+                "type": "integer"
+              },
+              "unitsSold": {
+                "type": "integer"
+              },
+              "ratingAvg": {
+                "type": "number",
+                "nullable": true
+              },
+              "reviewCount": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "productCount",
+              "unitsSold",
+              "ratingAvg",
+              "reviewCount"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "storeName",
+          "slug",
+          "description",
+          "logoUrl",
+          "memberSince",
+          "stats"
+        ]
+      },
+      "SellerProfile": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "storeName": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "supportEmail": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "active",
+              "suspended"
+            ]
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "storeName",
+          "slug",
+          "description",
+          "supportEmail",
+          "status",
+          "createdAt"
+        ]
       }
     },
     "parameters": {}
@@ -1378,6 +1478,50 @@
           },
           "409": {
             "description": "Already reviewed"
+          }
+        }
+      }
+    },
+    "/sellers/{slug}": {
+      "get": {
+        "summary": "Seller storefront",
+        "tags": [
+          "Sellers"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "slug",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Storefront",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Storefront"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
           }
         }
       }
