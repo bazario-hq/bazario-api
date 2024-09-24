@@ -34,6 +34,11 @@ export const categoriesService = {
     return buildTree(all, null);
   },
 
+  async topLevel() {
+    const all = await categoriesRepository.all();
+    return all.filter((c) => c.parent_id === null).map((c) => ({ id: c.id, name: c.name, slug: c.slug }));
+  },
+
   async detail(slug: string) {
     const all = await categoriesRepository.all();
     const category = all.find((c) => c.slug === slug);
