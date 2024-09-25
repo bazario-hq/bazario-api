@@ -167,6 +167,26 @@ const authService = {
     if (!user) throw notFound('User');
     return toMe(user);
   },
+
+  async updateMe(userId: number, input: { name: string }) {
+    const user = await usersRepository.update(userId, { name: input.name });
+    return toMe(user);
+  },
+
+  async changePassword(userId: number, input: { currentPassword: string; newPassword: string }) {
+    const user = await usersRepository.findById(userId);
+    if (!user) throw notFound('User');
+    if (!verifyPassword(input.currentPassword, user.password_hash)) {
+      throw unauthorized('Current password is incorrect');
+    }
+    await usersRepository.update(userId, { password_hash: hashPassword(input.newPassword) });
+    await refreshTokensRepository.revokeAllForUser(userId);
+    await sendMail({
+      to: user.email,
+      subject: 'Your Bazario password was changed',
+      text: `Hi ${user.name},\n\nYour password was just changed. If this wasn't you, contact support right away.`,
+    });
+  },
 };
 
 export const authRouter = Router();
@@ -244,4 +264,36 @@ route(
     responses: { 200: { description: 'Profile', schema: MeSchema } },
   },
   ({ user }) => authService.me(user.id),
+);
+
+route(
+  authRouter,
+  mount,
+  {
+    method: 'patch',
+    path: '/me',
+    summary: 'Update profile',
+    tags,
+    auth: 'required',
+    body: UpdateMeBody,
+    responses: { 200: { description: 'Profile', schema: MeSchema } },
+  },
+  ({ user, body }) => authService.updateMe(user.id, body),
+);
+
+route(
+  authRouter,
+  mount,
+  {
+    method: 'post',
+    path: '/password',
+    summary: 'Change password (signs out other sessions)',
+    tags,
+    auth: 'required',
+    body: ChangePasswordBody,
+    responses: { 204: { description: 'Password changed' } },
+  },
+  async ({ user, body }) => {
+    await authService.changePassword(user.id, body);
+  },
 );

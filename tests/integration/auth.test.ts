@@ -65,5 +65,34 @@ describe('auth', () => {
   });
 
   describe('profile', () => {
+    it('updates the display name', async () => {
+      const user = await createUser();
+      const res = await api().patch('/api/auth/me').set(user.auth).send({ name: '  Renamed  ' });
+      expect(res.status).toBe(200);
+      expectSchema(MeSchema, res.body);
+      expect(res.body.name).toBe('Renamed');
+    });
+
+    it('changes the password, signs out other sessions and emails the user', async () => {
+      const user = await createUser();
+      const login = await api().post('/api/auth/login').send({ email: user.email, password: PASSWORD });
+
+      const wrong = await api()
+        .post('/api/auth/password')
+        .set(user.auth)
+        .send({ currentPassword: 'wrong-one', newPassword: 'brand-new-password' });
+      expect(wrong.status).toBe(401);
+
+      const res = await api()
+        .post('/api/auth/password')
+        .set(user.auth)
+        .send({ currentPassword: PASSWORD, newPassword: 'brand-new-password' });
+      expect(res.status).toBe(204);
+
+      expect((await api().post('/api/auth/refresh').send({ refreshToken: login.body.refreshToken })).status).toBe(401);
+      expect((await api().post('/api/auth/login').send({ email: user.email, password: PASSWORD })).status).toBe(401);
+      expect((await api().post('/api/auth/login').send({ email: user.email, password: 'brand-new-password' })).status).toBe(200);
+      expect(sentMail.some((m) => m.to === user.email && m.subject.includes('password was changed'))).toBe(true);
+    });
   });
 });
