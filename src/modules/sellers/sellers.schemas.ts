@@ -19,6 +19,12 @@ export const Storefront = registry.register(
   }),
 );
 
+export const SellerApplyBody = z.object({
+  storeName: z.string().trim().min(2).max(80),
+  description: z.string().max(2000).optional(),
+  supportEmail: z.string().email().optional(),
+});
+
 export const SellerProfile = registry.register(
   'SellerProfile',
   z.object({

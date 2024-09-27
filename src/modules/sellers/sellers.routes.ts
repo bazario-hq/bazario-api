@@ -28,6 +28,38 @@ route(
   sellersRouter,
   mount,
   {
+    method: 'post',
+    path: '/apply',
+    summary: 'Apply to become a seller (reviewed by an admin)',
+    tags,
+    auth: 'required',
+    body: SellerApplyBody,
+    status: 201,
+    responses: { 201: { description: 'Application created', schema: SellerProfile }, 409: { description: 'Already applied' } },
+  },
+  async ({ user, body, req }) => {
+    const existing = await sellersRepository.findByUserId(user.id);
+    if (existing) throw conflict('You already have a seller account');
+
+    let slug = slugify(body.storeName) || 'store';
+    if (await sellersRepository.slugExists(slug)) slug = `${slug}-${uniqueSuffix()}`;
+
+    const seller = await sellersRepository.create({
+      user_id: user.id,
+      store_name: body.storeName,
+      slug,
+      description: body.description ?? null,
+      support_email: body.supportEmail ?? null,
+    });
+    await recordAudit(req, { action: 'seller.apply', entityType: 'seller', entityId: seller.id });
+    return toSellerProfile(seller);
+  },
+);
+
+route(
+  sellersRouter,
+  mount,
+  {
     method: 'get',
     path: '/{slug}',
     summary: 'Seller storefront',
