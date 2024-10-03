@@ -117,6 +117,15 @@ export const productsRepository = {
       .where('status', '=', 'active')
       .executeTakeFirst();
   },
+
+  inWishlist(userId: number, productId: number) {
+    return db
+      .selectFrom('wishlist_items')
+      .select('product_id')
+      .where('user_id', '=', userId)
+      .where('product_id', '=', productId)
+      .executeTakeFirst();
+  },
 };
 
 export type ProductRow = Awaited<ReturnType<typeof productsRepository.search>>[number];
