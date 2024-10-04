@@ -111,6 +111,14 @@ export interface WishlistItemsTable {
   created_at: Generated<Date>;
 }
 
+export interface CartItemsTable {
+  user_id: number;
+  product_id: number;
+  quantity: number;
+  created_at: Generated<Date>;
+  updated_at: Generated<Date>;
+}
+
 export interface Database {
   users: UsersTable;
   refresh_tokens: RefreshTokensTable;
@@ -120,6 +128,7 @@ export interface Database {
   product_images: ProductImagesTable;
   reviews: ReviewsTable;
   wishlist_items: WishlistItemsTable;
+  cart_items: CartItemsTable;
 }
 
 export type User = Selectable<UsersTable>;

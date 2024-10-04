@@ -263,6 +263,91 @@
           "user"
         ]
       },
+      "Cart": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "productId": {
+                  "type": "integer"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "slug": {
+                  "type": "string"
+                },
+                "unitPriceCents": {
+                  "type": "integer"
+                },
+                "quantity": {
+                  "type": "integer"
+                },
+                "lineTotalCents": {
+                  "type": "integer"
+                },
+                "stock": {
+                  "type": "integer"
+                },
+                "available": {
+                  "type": "boolean"
+                },
+                "image": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Image"
+                    },
+                    {
+                      "nullable": true
+                    }
+                  ]
+                },
+                "seller": {
+                  "$ref": "#/components/schemas/SellerSummary"
+                }
+              },
+              "required": [
+                "productId",
+                "name",
+                "slug",
+                "unitPriceCents",
+                "quantity",
+                "lineTotalCents",
+                "stock",
+                "available",
+                "image",
+                "seller"
+              ]
+            }
+          },
+          "subtotalCents": {
+            "type": "integer"
+          },
+          "shippingCents": {
+            "type": "integer"
+          },
+          "totalCents": {
+            "type": "integer"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "itemCount": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "subtotalCents",
+          "shippingCents",
+          "totalCents",
+          "currency",
+          "itemCount"
+        ]
+      },
       "CategoryNode": {
         "type": "object",
         "properties": {
@@ -1147,6 +1232,179 @@
         "responses": {
           "204": {
             "description": "Password changed"
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cart": {
+      "get": {
+        "summary": "Your cart",
+        "tags": [
+          "Cart"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cart",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Cart"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cart/items/{productId}": {
+      "put": {
+        "summary": "Add a product or set its quantity",
+        "tags": [
+          "Cart"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true
+            },
+            "required": true,
+            "name": "productId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "quantity": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 99
+                  }
+                },
+                "required": [
+                  "quantity"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated cart",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Cart"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Product not found"
+          },
+          "422": {
+            "description": "Not enough stock"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Remove a product from the cart",
+        "tags": [
+          "Cart"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true
+            },
+            "required": true,
+            "name": "productId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Updated cart",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Cart"
+                }
+              }
+            }
           },
           "400": {
             "description": "Invalid request",
