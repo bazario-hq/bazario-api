@@ -1,0 +1,57 @@
+import { beforeEach, describe, expect, it } from 'vitest';
+import { db } from '../../src/db/index.js';
+import { CartSchema } from '../../src/modules/cart/cart.routes.js';
+import { api, useTestDb } from '../support/app.js';
+import { addImage, createCategory, createProduct, createSeller, createUser } from '../support/factories.js';
+import { expectSchema } from '../support/schema.js';
+
+describe('wishlist and cart', () => {
+  useTestDb();
+
+  let buyer: Awaited<ReturnType<typeof createUser>>;
+  let product: Awaited<ReturnType<typeof createProduct>>;
+  let sellerId: number;
+  let categoryId: number;
+
+  beforeEach(async () => {
+    const cat = await createCategory();
+    const { seller } = await createSeller();
+    sellerId = seller.id;
+    categoryId = cat.id;
+    product = await createProduct(seller.id, cat.id, { priceCents: 1500, stock: 3 });
+    buyer = await createUser();
+  });
+
+  describe('wishlist', () => {
+    it('adds, lists and removes products idempotently', async () => {
+      await addImage(product.id);
+      expect((await api().put(`/api/wishlist/${product.id}`).set(buyer.auth)).status).toBe(204);
+      expect((await api().put(`/api/wishlist/${product.id}`).set(buyer.auth)).status).toBe(204);
+
+      const list = await api().get('/api/wishlist').set(buyer.auth);
+      expect(list.status).toBe(200);
+      expect(list.body.items).toHaveLength(1);
+      expect(list.body.items[0].product.id).toBe(product.id);
+      expect(list.body.items[0].product.image).not.toBeNull();
+
+      expect((await api().delete(`/api/wishlist/${product.id}`).set(buyer.auth)).status).toBe(204);
+      expect((await api().get('/api/wishlist').set(buyer.auth)).body.items).toHaveLength(0);
+    });
+  });
+
+  describe('cart', () => {
+    it('adds items and computes totals with flat shipping under the threshold', async () => {
+      const res = await api().put(`/api/cart/items/${product.id}`).set(buyer.auth).send({ quantity: 2 });
+      expect(res.status).toBe(200);
+      expectSchema(CartSchema, res.body);
+      expect(res.body).toMatchObject({ subtotalCents: 3000, shippingCents: 599, totalCents: 3599, itemCount: 2 });
+      expect(res.body.items[0]).toMatchObject({ productId: product.id, quantity: 2, lineTotalCents: 3000, available: true });
+    });
+
+    it('ships free over the threshold', async () => {
+      const pricey = await createProduct(sellerId, categoryId, { priceCents: 6000 });
+      const res = await api().put(`/api/cart/items/${pricey.id}`).set(buyer.auth).send({ quantity: 1 });
+      expect(res.body).toMatchObject({ subtotalCents: 6000, shippingCents: 0, totalCents: 6000 });
+    });
+  });
+});
