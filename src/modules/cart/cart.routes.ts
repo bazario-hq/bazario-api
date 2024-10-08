@@ -84,3 +84,19 @@ route(
   },
   ({ user, params }) => cartService.remove(user.id, params.productId),
 );
+
+route(
+  cartRouter,
+  mount,
+  {
+    method: 'delete',
+    path: '',
+    summary: 'Empty the cart',
+    tags,
+    auth: 'required',
+    responses: { 204: { description: 'Emptied' } },
+  },
+  async ({ user }) => {
+    await cartService.clear(user.id);
+  },
+);

@@ -86,4 +86,8 @@ export const cartService = {
     await db.deleteFrom('cart_items').where('user_id', '=', userId).where('product_id', '=', productId).execute();
     return this.get(userId);
   },
+
+  async clear(userId: number) {
+    await db.deleteFrom('cart_items').where('user_id', '=', userId).execute();
+  },
 };
