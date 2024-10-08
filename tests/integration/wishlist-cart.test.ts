@@ -53,5 +53,11 @@ describe('wishlist and cart', () => {
       const res = await api().put(`/api/cart/items/${pricey.id}`).set(buyer.auth).send({ quantity: 1 });
       expect(res.body).toMatchObject({ subtotalCents: 6000, shippingCents: 0, totalCents: 6000 });
     });
+
+    it('sets the quantity rather than adding to it', async () => {
+      await api().put(`/api/cart/items/${product.id}`).set(buyer.auth).send({ quantity: 1 });
+      const res = await api().put(`/api/cart/items/${product.id}`).set(buyer.auth).send({ quantity: 3 });
+      expect(res.body.items[0].quantity).toBe(3);
+    });
   });
 });
