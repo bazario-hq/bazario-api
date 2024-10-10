@@ -37,6 +37,12 @@ describe('wishlist and cart', () => {
       expect((await api().delete(`/api/wishlist/${product.id}`).set(buyer.auth)).status).toBe(204);
       expect((await api().get('/api/wishlist').set(buyer.auth)).body.items).toHaveLength(0);
     });
+
+    it('rejects unknown or inactive products', async () => {
+      const draft = await createProduct(sellerId, categoryId, { status: 'draft' });
+      expect((await api().put(`/api/wishlist/${draft.id}`).set(buyer.auth)).status).toBe(404);
+      expect((await api().put('/api/wishlist/424242').set(buyer.auth)).status).toBe(404);
+    });
   });
 
   describe('cart', () => {
