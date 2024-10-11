@@ -65,5 +65,11 @@ describe('wishlist and cart', () => {
       const res = await api().put(`/api/cart/items/${product.id}`).set(buyer.auth).send({ quantity: 3 });
       expect(res.body.items[0].quantity).toBe(3);
     });
+
+    it('refuses more than the available stock', async () => {
+      const res = await api().put(`/api/cart/items/${product.id}`).set(buyer.auth).send({ quantity: 4 });
+      expect(res.status).toBe(422);
+      expect(res.body.error.details).toEqual({ available: 3 });
+    });
   });
 });
