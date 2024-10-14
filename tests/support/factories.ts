@@ -10,6 +10,15 @@ const PASSWORD_HASH = bcrypt.hashSync(PASSWORD, 4);
 let seq = 0;
 const next = () => ++seq;
 
+export const address: ShippingAddress = {
+  fullName: 'Ada Buyer',
+  line1: '12 Galle Road',
+  city: 'Colombo',
+  postalCode: '00300',
+  country: 'LK',
+  phone: null,
+};
+
 export interface TestUser {
   id: number;
   email: string;
@@ -111,6 +120,12 @@ export async function createProduct(
     .executeTakeFirstOrThrow();
 }
 
+/** Inserts an order directly, bypassing checkout. */
+export async function createOrder(
+  buyerId: number,
+  lines: { product: { id: number; seller_id: number; name: string; price_cents: number }; quantity: number; status?: 'pending' | 'shipped' | 'delivered' | 'cancelled' }[],
+  opts: { createdAt?: Date } = {},
+) {
   const subtotal = lines.reduce((s, l) => s + l.product.price_cents * l.quantity, 0);
   const createdAt = opts.createdAt ?? new Date();
   const order = await db

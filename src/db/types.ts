@@ -11,6 +11,16 @@ export type ProductStatus = 'draft' | 'active' | 'archived';
 export type OrderStatus = 'paid' | 'partially_shipped' | 'shipped' | 'delivered' | 'cancelled';
 export type OrderItemStatus = 'pending' | 'shipped' | 'delivered' | 'cancelled';
 
+export interface ShippingAddress {
+  fullName: string;
+  line1: string;
+  line2?: string | null;
+  city: string;
+  postalCode: string;
+  country: string;
+  phone?: string | null;
+}
+
 export interface ImageVariants {
   thumb: string;
   medium: string;
@@ -119,6 +129,37 @@ export interface CartItemsTable {
   updated_at: Generated<Date>;
 }
 
+export interface OrdersTable {
+  id: Generated<number>;
+  buyer_id: number;
+  status: Generated<OrderStatus>;
+  subtotal_cents: number;
+  shipping_cents: number;
+  total_cents: number;
+  currency: Generated<string>;
+  shipping_address: Json<ShippingAddress>;
+  payment_ref: string;
+  payment_last4: string;
+  cancelled_at: NullableTimestamp;
+  created_at: Generated<Date>;
+  updated_at: Generated<Date>;
+}
+
+export interface OrderItemsTable {
+  id: Generated<number>;
+  order_id: number;
+  product_id: number;
+  seller_id: number;
+  product_name: string;
+  unit_price_cents: number;
+  quantity: number;
+  status: Generated<OrderItemStatus>;
+  tracking_number: string | null;
+  shipped_at: NullableTimestamp;
+  delivered_at: NullableTimestamp;
+  created_at: Generated<Date>;
+}
+
 export interface Database {
   users: UsersTable;
   refresh_tokens: RefreshTokensTable;
@@ -129,6 +170,8 @@ export interface Database {
   reviews: ReviewsTable;
   wishlist_items: WishlistItemsTable;
   cart_items: CartItemsTable;
+  orders: OrdersTable;
+  order_items: OrderItemsTable;
 }
 
 export type User = Selectable<UsersTable>;
@@ -138,4 +181,6 @@ export type Product = Selectable<ProductsTable>;
 export type ProductUpdate = Updateable<ProductsTable>;
 export type ProductImage = Selectable<ProductImagesTable>;
 export type Review = Selectable<ReviewsTable>;
+export type Order = Selectable<OrdersTable>;
+export type OrderItem = Selectable<OrderItemsTable>;
 export type Category = Selectable<CategoriesTable>;
