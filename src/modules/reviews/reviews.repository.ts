@@ -56,6 +56,18 @@ export const reviewsRepository = {
       .executeTakeFirst();
   },
 
+  hasPurchased(userId: number, productId: number) {
+    return db
+      .selectFrom('order_items')
+      .innerJoin('orders', 'orders.id', 'order_items.order_id')
+      .select('order_items.id')
+      .where('orders.buyer_id', '=', userId)
+      .where('order_items.product_id', '=', productId)
+      .where('order_items.status', '!=', 'cancelled')
+      .limit(1)
+      .executeTakeFirst();
+  },
+
   create(values: { product_id: number; user_id: number; rating: number; title: string; body: string; status: ReviewStatus }) {
     return db.insertInto('reviews').values(values).returning('id').executeTakeFirstOrThrow();
   },
