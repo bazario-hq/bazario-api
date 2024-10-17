@@ -75,4 +75,17 @@ describe('checkout and orders', () => {
     const notified = await db.selectFrom('notifications').select('user_id').where('type', '=', 'order.created').execute();
     expect(notified.map((n) => n.user_id).sort()).toEqual([sellerA.user.id, sellerB.user.id].sort());
   });
+
+  it('rejects unknown quotes and quotes belonging to someone else', async () => {
+    await fillCart();
+    const q = await quote();
+    const other = await createUser();
+    const stolen = await api().post('/api/checkout/confirm').set(other.auth).send({ quoteId: q.quoteId, payment: goodCard });
+    expect(stolen.status).toBe(410);
+    const unknown = await api()
+      .post('/api/checkout/confirm')
+      .set(buyer.auth)
+      .send({ quoteId: '00000000-0000-4000-8000-000000000000', payment: goodCard });
+    expect(unknown.status).toBe(410);
+  });
 });
