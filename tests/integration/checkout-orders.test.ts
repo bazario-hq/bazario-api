@@ -76,6 +76,14 @@ describe('checkout and orders', () => {
     expect(notified.map((n) => n.user_id).sort()).toEqual([sellerA.user.id, sellerB.user.id].sort());
   });
 
+  it('asks the buyer to review the cart when a price changed after quoting', async () => {
+    await fillCart();
+    const q = await quote();
+    await db.updateTable('products').set({ price_cents: 2500 }).where('id', '=', lamp.id).execute();
+    const res = await api().post('/api/checkout/confirm').set(buyer.auth).send({ quoteId: q.quoteId, payment: goodCard });
+    expect(res.status).toBe(409);
+  });
+
   it('rejects unknown quotes and quotes belonging to someone else', async () => {
     await fillCart();
     const q = await quote();
