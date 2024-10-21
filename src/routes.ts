@@ -5,6 +5,7 @@ import { catalogRouter } from './modules/catalog/catalog.routes.js';
 import { checkoutRouter } from './modules/checkout/checkout.routes.js';
 import { ordersRouter } from './modules/orders/orders.routes.js';
 import { reviewsRouter } from './modules/reviews/reviews.routes.js';
+import { sellerRouter } from './modules/seller/seller.routes.js';
 import { sellersRouter } from './modules/sellers/sellers.routes.js';
 import { wishlistRouter } from './modules/wishlist/wishlist.routes.js';
 
@@ -18,3 +19,4 @@ apiRouter.use('/wishlist', wishlistRouter);
 apiRouter.use('/cart', cartRouter);
 apiRouter.use('/checkout', checkoutRouter);
 apiRouter.use('/orders', ordersRouter);
+apiRouter.use('/seller', sellerRouter);
