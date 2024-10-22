@@ -26,3 +26,18 @@ route(
   },
   ({ user, query }) => ordersService.list(user.id, query.page, query.pageSize),
 );
+
+route(
+  ordersRouter,
+  mount,
+  {
+    method: 'get',
+    path: '/{id}',
+    summary: 'One of your orders',
+    tags,
+    auth: 'required',
+    params: IdParams,
+    responses: { 200: { description: 'Order', schema: OrderSchema }, 404: { description: 'Not found' } },
+  },
+  ({ user, params }) => ordersService.get(user.id, params.id),
+);

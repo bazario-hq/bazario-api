@@ -78,4 +78,10 @@ export const ordersService = {
     }
     return { items: result, meta: pageMeta(page, pageSize, total) };
   },
+
+  async get(buyerId: number, orderId: number) {
+    const order = await ordersRepository.findById(orderId);
+    if (!order || order.buyer_id !== buyerId) throw notFound('Order');
+    return toOrder(order, await loadItems(order.id));
+  },
 };
