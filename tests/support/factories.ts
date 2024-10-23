@@ -120,6 +120,24 @@ export async function createProduct(
     .executeTakeFirstOrThrow();
 }
 
+export async function addImage(productId: number, position = 0) {
+  const n = next();
+  const base = `products/${productId}/img${n}`;
+  return db
+    .insertInto('product_images')
+    .values({
+      product_id: productId,
+      storage_key: `${base}/original.jpg`,
+      variants: JSON.stringify({ thumb: `${base}/thumb.jpg`, medium: `${base}/medium.jpg`, large: `${base}/large.jpg` }),
+      width: 1600,
+      height: 1200,
+      position,
+      alt_text: null,
+    })
+    .returningAll()
+    .executeTakeFirstOrThrow();
+}
+
 /** Inserts an order directly, bypassing checkout. */
 export async function createOrder(
   buyerId: number,

@@ -42,4 +42,12 @@ export const productImagesRepository = {
   findById(id: number) {
     return db.selectFrom('product_images').selectAll().where('id', '=', id).executeTakeFirst();
   },
+
+  maxPosition(productId: number) {
+    return db
+      .selectFrom('product_images')
+      .select((eb) => eb.fn.max('position').as('max'))
+      .where('product_id', '=', productId)
+      .executeTakeFirst();
+  },
 };

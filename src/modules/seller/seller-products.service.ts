@@ -174,4 +174,34 @@ export const sellerProductsService = {
       .execute();
     await recordAudit(req, { action: 'product.archive', entityType: 'product', entityId: productId });
   },
+
+  async addImage(sellerId: number, productId: number, file: { buffer: Buffer; mimetype: string }, altText: string | null) {
+    await ownedProduct(sellerId, productId);
+    const stored = await storeProductImage(productId, file);
+    const max = await productImagesRepository.maxPosition(productId);
+    await db
+      .insertInto('product_images')
+      .values({
+        product_id: productId,
+        storage_key: stored.storageKey,
+        variants: JSON.stringify(stored.variants),
+        width: stored.width,
+        height: stored.height,
+        position: max?.max == null ? 0 : Number(max.max) + 1,
+        alt_text: altText,
+      })
+      .execute();
+    return this.get(sellerId, productId);
+  },
+
+  async removeImage(sellerId: number, productId: number, imageId: number) {
+    await ownedProduct(sellerId, productId);
+    const image = await productImagesRepository.findById(imageId);
+    if (!image || image.product_id !== productId) throw notFound('Image');
+    await db.deleteFrom('product_images').where('id', '=', imageId).execute();
+    const variants = image.variants as ImageVariants;
+    for (const key of [image.storage_key, variants.thumb, variants.medium, variants.large]) {
+      await deleteObject(key).catch(() => undefined);
+    }
+  },
 };

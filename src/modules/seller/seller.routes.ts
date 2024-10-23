@@ -1,5 +1,7 @@
 import { Router } from 'express';
+import multer from 'multer';
 import { badRequest } from '../../lib/errors.js';
+import { ACCEPTED_IMAGE_TYPES } from '../../lib/images.js';
 import { route } from '../../lib/route.js';
 import { requireAuth } from '../../middleware/auth.js';
 import { z } from '../../openapi/zod.js';
@@ -23,6 +25,19 @@ const mount = '/seller';
 const tags = ['Seller'];
 const auth = 'required' as const;
 
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 15 * 1024 * 1024, files: 1 },
+  fileFilter: (_req, file, cb) => {
+    if (ACCEPTED_IMAGE_TYPES.includes(file.mimetype)) cb(null, true);
+    else cb(badRequest('Images must be JPEG or PNG'));
+  },
+});
+
+const ProductImageParams = z.object({
+  id: z.coerce.number().int().positive(),
+  imageId: z.coerce.number().int().positive(),
+});
 const pageParams = {
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(20),
@@ -121,6 +136,49 @@ route(
   },
   async ({ req, res, params }) => {
     await sellerProductsService.archive(req, currentSeller(res).id, params.id);
+  },
+);
+
+route(
+  sellerRouter,
+  mount,
+  {
+    method: 'post',
+    path: '/products/{id}/images',
+    summary: 'Upload a product image (multipart field "image")',
+    tags,
+    auth,
+    params: IdParams,
+    body: z.object({
+      image: z.string().openapi({ type: 'string', format: 'binary' }),
+      altText: z.string().max(200).optional(),
+    }),
+    bodyContentType: 'multipart/form-data',
+    middleware: [upload.single('image')],
+    status: 201,
+    responses: { 201: { description: 'Product with the new image', schema: SellerProductSchema } },
+  },
+  async ({ req, res, params }) => {
+    if (!req.file) throw badRequest('Missing "image" file');
+    const altText = typeof req.body?.altText === 'string' ? req.body.altText.slice(0, 200) : null;
+    return sellerProductsService.addImage(currentSeller(res).id, params.id, req.file, altText);
+  },
+);
+
+route(
+  sellerRouter,
+  mount,
+  {
+    method: 'delete',
+    path: '/products/{id}/images/{imageId}',
+    summary: 'Delete a product image',
+    tags,
+    auth,
+    params: ProductImageParams,
+    responses: { 204: { description: 'Deleted' } },
+  },
+  async ({ res, params }) => {
+    await sellerProductsService.removeImage(currentSeller(res).id, params.id, params.imageId);
   },
 );
 
