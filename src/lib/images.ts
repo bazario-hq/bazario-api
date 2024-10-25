@@ -4,7 +4,7 @@ import type { ImageVariants } from '../db/types.js';
 import { putObject } from './storage.js';
 
 export const VARIANT_WIDTHS = { thumb: 200, medium: 600, large: 1200 } as const;
-export const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png'];
+export const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 const extensionFor: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
 
