@@ -109,6 +109,46 @@ describe('seller area', () => {
     });
   });
 
+  describe('orders', () => {
+    it('lists orders with the seller items and ships them', async () => {
+      const mine = await createProduct(seller.seller.id, categoryId, { name: 'Rug', priceCents: 3000 });
+      const other = await createSeller();
+      const theirs = await createProduct(other.seller.id, categoryId, { name: 'Lamp' });
+      const buyer = await createUser({ name: 'Kamal' });
+      const order = await createOrder(buyer.id, [{ product: mine, quantity: 2 }, { product: theirs, quantity: 1 }]);
+
+      const list = await api().get('/api/seller/orders').set(seller.user.auth);
+      expect(list.body.items).toEqual([
+        expect.objectContaining({ orderId: order.id, buyerName: 'Kamal', itemCount: 2, totalCents: 6000, fulfilment: 'pending' }),
+      ]);
+
+      const detail = await api().get(`/api/seller/orders/${order.id}`).set(seller.user.auth);
+      expectSchema(SellerOrderDetail, detail.body);
+      expect(detail.body.items.map((i: { productName: string }) => i.productName)).toEqual(['Rug']);
+
+      const shipped = await api()
+        .post(`/api/seller/orders/${order.id}/ship`)
+        .set(seller.user.auth)
+        .send({ trackingNumber: 'LK123456789' });
+      expect(shipped.status).toBe(200);
+      expect(shipped.body.items[0]).toMatchObject({ status: 'shipped', trackingNumber: 'LK123456789' });
+
+      const buyerView = await api().get(`/api/orders/${order.id}`).set(buyer.auth);
+      expect(buyerView.body.status).toBe('partially_shipped');
+      expect(sentMail.some((m) => m.to === buyer.email && m.subject.includes('has shipped'))).toBe(true);
+      const note = await db.selectFrom('notifications').select('type').where('user_id', '=', buyer.id).execute();
+      expect(note.map((n) => n.type)).toEqual(['order.shipped']);
+
+      expect((await api().post(`/api/seller/orders/${order.id}/ship`).set(seller.user.auth).send({ trackingNumber: 'AGAIN' })).status).toBe(409);
+
+      const delivered = await api().post(`/api/seller/orders/${order.id}/deliver`).set(seller.user.auth).send({});
+      expect(delivered.body.items[0].status).toBe('delivered');
+
+      const filtered = await api().get('/api/seller/orders').query({ status: 'pending' }).set(seller.user.auth);
+      expect(filtered.body.items).toEqual([]);
+    });
+  });
+
   describe('payouts and exports', () => {
   });
 });

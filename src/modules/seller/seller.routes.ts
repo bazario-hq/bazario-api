@@ -12,10 +12,13 @@ import { SellerProfile } from '../sellers/sellers.schemas.js';
 import { currentSeller, loadSeller } from './seller.context.js';
 import {
   CreateProductBody,
+  SellerOrderDetail,
+  SellerOrderSummary,
   SellerProductList,
   SellerProductSchema,
   UpdateProductBody,
 } from './seller.schemas.js';
+import { sellerOrdersService } from './seller-orders.service.js';
 import { sellerProductsService } from './seller-products.service.js';
 
 export const sellerRouter = Router();
@@ -38,6 +41,7 @@ const ProductImageParams = z.object({
   id: z.coerce.number().int().positive(),
   imageId: z.coerce.number().int().positive(),
 });
+const OrderIdParams = z.object({ orderId: z.coerce.number().int().positive() });
 const pageParams = {
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(20),
@@ -185,5 +189,72 @@ route(
 // Inventory
 
 // Orders
+
+route(
+  sellerRouter,
+  mount,
+  {
+    method: 'get',
+    path: '/orders',
+    summary: 'Orders that contain your products',
+    tags,
+    auth,
+    query: z.object({ status: z.enum(['pending', 'shipped', 'delivered', 'cancelled']).optional(), ...pageParams }),
+    responses: {
+      200: { description: 'Orders', schema: z.object({ items: z.array(SellerOrderSummary), meta: PageMeta }) },
+    },
+  },
+  ({ res, query }) => sellerOrdersService.list(currentSeller(res).id, query),
+);
+
+route(
+  sellerRouter,
+  mount,
+  {
+    method: 'get',
+    path: '/orders/{orderId}',
+    summary: 'Your items in an order',
+    tags,
+    auth,
+    params: OrderIdParams,
+    responses: { 200: { description: 'Order', schema: SellerOrderDetail }, 404: { description: 'Not found' } },
+  },
+  ({ res, params }) => sellerOrdersService.get(currentSeller(res).id, params.orderId),
+);
+
+route(
+  sellerRouter,
+  mount,
+  {
+    method: 'post',
+    path: '/orders/{orderId}/ship',
+    summary: 'Mark items as shipped',
+    tags,
+    auth,
+    params: OrderIdParams,
+    body: z.object({
+      itemIds: z.array(z.number().int().positive()).optional(),
+      trackingNumber: z.string().trim().min(3).max(60),
+    }),
+    responses: { 200: { description: 'Order', schema: SellerOrderDetail }, 409: { description: 'Nothing to ship' } },
+  },
+  ({ res, params, body }) => sellerOrdersService.ship(currentSeller(res).id, params.orderId, body),
+);
+
+route(
+  sellerRouter,
+  mount,
+  {
+    method: 'post',
+    path: '/orders/{orderId}/deliver',
+    summary: 'Mark shipped items as delivered',
+    tags,
+    auth,
+    params: OrderIdParams,
+    body: z.object({ itemIds: z.array(z.number().int().positive()).optional() }),
+    responses: { 200: { description: 'Order', schema: SellerOrderDetail }, 409: { description: 'Nothing to deliver' } },
+  },
+  ({ res, params, body }) => sellerOrdersService.deliver(currentSeller(res).id, params.orderId, body.itemIds),
+);
 
 // Payouts and exports

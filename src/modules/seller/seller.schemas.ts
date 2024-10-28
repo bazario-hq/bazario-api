@@ -53,3 +53,39 @@ export const UpdateProductBody = z.object({
   specs: z.record(z.string().max(500)).optional(),
   status: z.enum(['draft', 'active', 'archived']).optional(),
 });
+
+export const SellerOrderSummary = registry.register(
+  'SellerOrderSummary',
+  z.object({
+    orderId: z.number().int(),
+    createdAt: z.string(),
+    buyerName: z.string(),
+    itemCount: z.number().int(),
+    totalCents: z.number().int(),
+    fulfilment: z.enum(['pending', 'partially_shipped', 'shipped', 'delivered', 'cancelled']),
+  }),
+);
+
+export const SellerOrderDetail = registry.register(
+  'SellerOrderDetail',
+  z.object({
+    orderId: z.number().int(),
+    createdAt: z.string(),
+    buyerName: z.string(),
+    shippingAddress: ShippingAddressSchema,
+    totalCents: z.number().int(),
+    items: z.array(
+      z.object({
+        id: z.number().int(),
+        productId: z.number().int(),
+        productName: z.string(),
+        unitPriceCents: z.number().int(),
+        quantity: z.number().int(),
+        status: z.enum(['pending', 'shipped', 'delivered', 'cancelled']),
+        trackingNumber: z.string().nullable(),
+        shippedAt: z.string().nullable(),
+        deliveredAt: z.string().nullable(),
+      }),
+    ),
+  }),
+);
