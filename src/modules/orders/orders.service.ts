@@ -84,4 +84,65 @@ export const ordersService = {
     if (!order || order.buyer_id !== buyerId) throw notFound('Order');
     return toOrder(order, await loadItems(order.id));
   },
+
+  async cancel(req: Request, buyerId: number, orderId: number) {
+    const order = await ordersRepository.findById(orderId);
+    if (!order || order.buyer_id !== buyerId) throw notFound('Order');
+    if (order.status === 'cancelled') throw conflict('Order is already cancelled');
+
+    const items = await ordersRepository.items(orderId);
+    if (items.some((i) => i.status !== 'pending' && i.status !== 'cancelled')) {
+      throw conflict('Orders can only be cancelled before anything has shipped');
+    }
+
+    await db.transaction().execute(async (trx) => {
+      for (const item of items.filter((i) => i.status === 'pending')) {
+        const { stock } = await trx
+          .updateTable('products')
+          .set({ stock: sql`stock + ${item.quantity}`, sales_count: sql`greatest(sales_count - ${item.quantity}, 0)` })
+          .where('id', '=', item.product_id)
+          .returning('stock')
+          .executeTakeFirstOrThrow();
+        await trx
+          .insertInto('inventory_adjustments')
+          .values({
+            product_id: item.product_id,
+            delta: item.quantity,
+            stock_after: stock,
+            reason: `order #${orderId} cancelled`,
+            actor_id: buyerId,
+          })
+          .execute();
+      }
+      await trx.updateTable('order_items').set({ status: 'cancelled' }).where('order_id', '=', orderId).execute();
+      await trx
+        .updateTable('orders')
+        .set({ status: 'cancelled', cancelled_at: new Date(), updated_at: new Date() })
+        .where('id', '=', orderId)
+        .execute();
+    });
+
+    try {
+      await refundCharge(order.payment_ref, order.total_cents);
+    } catch (err) {
+      logger.error({ err, orderId }, 'refund failed; needs manual follow-up');
+    }
+
+    const sellerUserIds = await db
+      .selectFrom('sellers')
+      .select('user_id')
+      .where('id', 'in', [...new Set(items.map((i) => i.seller_id))])
+      .execute();
+    for (const { user_id } of sellerUserIds) {
+      await notificationsService.notify(user_id, {
+        type: 'order.cancelled',
+        title: `Order #${orderId} was cancelled`,
+        body: 'The buyer cancelled this order before it shipped. Stock has been restored.',
+        link: `/seller/orders/${orderId}`,
+      });
+    }
+    await recordAudit(req, { action: 'order.cancel', entityType: 'order', entityId: orderId });
+
+    return this.get(buyerId, orderId);
+  },
 };

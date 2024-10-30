@@ -96,4 +96,31 @@ describe('checkout and orders', () => {
       .send({ quoteId: '00000000-0000-4000-8000-000000000000', payment: goodCard });
     expect(unknown.status).toBe(410);
   });
+
+  describe('cancellation', () => {
+    it('cancels an unshipped order, restores stock and tells the sellers', async () => {
+      await fillCart();
+      const q = await quote();
+      const placed = await api().post('/api/checkout/confirm').set(buyer.auth).send({ quoteId: q.quoteId, payment: goodCard });
+
+      const res = await api().post(`/api/orders/${placed.body.id}/cancel`).set(buyer.auth);
+      expect(res.status).toBe(200);
+      expect(res.body.status).toBe('cancelled');
+      expect(res.body.items.every((i: { status: string }) => i.status === 'cancelled')).toBe(true);
+      expect(await stockOf(lamp.id)).toEqual({ stock: 5, sales_count: 0 });
+
+      const notes = await db.selectFrom('notifications').select('user_id').where('type', '=', 'order.cancelled').execute();
+      expect(notes).toHaveLength(2);
+      expect((await api().post(`/api/orders/${placed.body.id}/cancel`).set(buyer.auth)).status).toBe(409);
+    });
+
+    it('cannot cancel once something has shipped', async () => {
+      const order = await createOrder(buyer.id, [
+        { product: lamp, quantity: 1, status: 'shipped' },
+        { product: mug, quantity: 1 },
+      ]);
+      const res = await api().post(`/api/orders/${order.id}/cancel`).set(buyer.auth);
+      expect(res.status).toBe(409);
+    });
+  });
 });

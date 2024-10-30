@@ -28,3 +28,8 @@ export async function chargeCard(amountCents: number, card: CardDetails): Promis
   }
   return { ref: `ch_${crypto.randomBytes(12).toString('hex')}`, last4: number.slice(-4), amountCents };
 }
+
+export async function refundCharge(ref: string, amountCents: number) {
+  await sleep(config.PAYMENT_LATENCY_MS);
+  return { ref: `re_${crypto.randomBytes(12).toString('hex')}`, chargeRef: ref, amountCents };
+}

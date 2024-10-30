@@ -41,3 +41,18 @@ route(
   },
   ({ user, params }) => ordersService.get(user.id, params.id),
 );
+
+route(
+  ordersRouter,
+  mount,
+  {
+    method: 'post',
+    path: '/{id}/cancel',
+    summary: 'Cancel an order that has not shipped yet',
+    tags,
+    auth: 'required',
+    params: IdParams,
+    responses: { 200: { description: 'Cancelled order', schema: OrderSchema }, 409: { description: 'Cannot cancel' } },
+  },
+  ({ req, user, params }) => ordersService.cancel(req, user.id, params.id),
+);
