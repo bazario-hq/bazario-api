@@ -1,5 +1,5 @@
 export const SHIPPING_FLAT_CENTS = 599;
-export const FREE_SHIPPING_THRESHOLD_CENTS = 7500;
+export const FREE_SHIPPING_THRESHOLD_CENTS = 5000;
 
 export function shippingFor(subtotalCents: number): number {
   if (subtotalCents === 0) return 0;

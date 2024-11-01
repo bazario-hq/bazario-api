@@ -4,8 +4,8 @@ import { feeFor, formatCents, shippingFor } from '../../src/lib/money.js';
 describe('money', () => {
   it('charges flat shipping below the free shipping threshold', () => {
     expect(shippingFor(0)).toBe(0);
-    expect(shippingFor(7499)).toBe(599);
-    expect(shippingFor(7500)).toBe(0);
+    expect(shippingFor(4999)).toBe(599);
+    expect(shippingFor(5000)).toBe(0);
   });
 
   it('formats cents as dollars', () => {
