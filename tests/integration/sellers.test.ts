@@ -18,4 +18,12 @@ describe('sellers', () => {
 
     expect((await api().post('/api/sellers/apply').set(user.auth).send({ storeName: 'Again' })).status).toBe(409);
   });
+
+  it('makes store slugs unique', async () => {
+    const a = await createUser();
+    const b = await createUser();
+    await api().post('/api/sellers/apply').set(a.auth).send({ storeName: 'Spice Box' });
+    const res = await api().post('/api/sellers/apply').set(b.auth).send({ storeName: 'Spice Box' });
+    expect(res.body.slug).toMatch(/^spice-box-[a-z0-9]+$/);
+  });
 });
