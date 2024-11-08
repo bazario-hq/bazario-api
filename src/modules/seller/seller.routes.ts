@@ -56,6 +56,32 @@ route(
   async ({ res }) => toSellerProfile(currentSeller(res)),
 );
 
+route(
+  sellerRouter,
+  mount,
+  {
+    method: 'patch',
+    path: '/profile',
+    summary: 'Update your seller profile',
+    tags,
+    auth,
+    body: z.object({
+      storeName: z.string().trim().min(2).max(80).optional(),
+      description: z.string().max(2000).nullable().optional(),
+      supportEmail: z.string().email().nullable().optional(),
+    }),
+    responses: { 200: { description: 'Profile', schema: SellerProfile } },
+  },
+  async ({ res, body }) => {
+    const seller = await sellersRepository.update(currentSeller(res).id, {
+      store_name: body.storeName,
+      description: body.description,
+      support_email: body.supportEmail,
+    });
+    return toSellerProfile(seller);
+  },
+);
+
 // Dashboard
 
 // Products

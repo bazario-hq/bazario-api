@@ -32,6 +32,14 @@ describe('seller area', () => {
   });
 
   describe('access', () => {
+    it('updates the seller profile', async () => {
+      const res = await api()
+        .patch('/api/seller/profile')
+        .set(seller.user.auth)
+        .send({ storeName: 'Ruhunu Rugs & Mats', supportEmail: 'help@rugs.example.test' });
+      expect(res.status).toBe(200);
+      expect(res.body).toMatchObject({ storeName: 'Ruhunu Rugs & Mats', supportEmail: 'help@rugs.example.test' });
+    });
   });
 
   describe('products', () => {
