@@ -72,6 +72,21 @@ describe('seller area', () => {
       expect(audit.map((a) => a.action)).toEqual(['product.create', 'product.update', 'product.archive']);
     });
 
+    it("cannot see or edit another seller's products", async () => {
+      const other = await createSeller();
+      const theirs = await createProduct(other.seller.id, categoryId);
+      expect((await api().get(`/api/seller/products/${theirs.id}`).set(seller.user.auth)).status).toBe(404);
+      expect((await api().patch(`/api/seller/products/${theirs.id}`).set(seller.user.auth).send({ priceCents: 1 })).status).toBe(404);
+    });
+
+    it('rejects unknown categories', async () => {
+      const res = await api()
+        .post('/api/seller/products')
+        .set(seller.user.auth)
+        .send({ name: 'Thing', priceCents: 100, categoryId: 999999 });
+      expect(res.status).toBe(400);
+    });
+
     it('uploads images, stores resized variants and serves them', async () => {
       const product = await createProduct(seller.seller.id, categoryId);
       const jpeg = await sharp({ create: { width: 1600, height: 1200, channels: 3, background: '#c0392b' } }).jpeg().toBuffer();
