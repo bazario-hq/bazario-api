@@ -70,6 +70,13 @@ describe('catalog', () => {
       expect(res.body.items[0].seller).toEqual({ id: seller.seller.id, storeName: 'Kandy Crafts', slug: seller.seller.slug });
     });
 
+    it('hides products from suspended sellers', async () => {
+      const suspended = await createSeller({ status: 'suspended' });
+      await createProduct(suspended.seller.id, shoes.id);
+      const res = await api().get('/api/products');
+      expect(res.body.items).toHaveLength(0);
+    });
+
     it('searches names and descriptions case-insensitively', async () => {
       const a = await createProduct(seller.seller.id, shoes.id, { name: 'Leather Sandal' });
       const b = await createProduct(seller.seller.id, kitchen.id, { name: 'Clay pot', description: 'Pairs well with a sandal-wood spoon' });
