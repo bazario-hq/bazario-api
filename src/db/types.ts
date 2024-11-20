@@ -160,6 +160,28 @@ export interface OrderItemsTable {
   created_at: Generated<Date>;
 }
 
+export interface NotificationsTable {
+  id: Generated<number>;
+  user_id: number;
+  type: string;
+  title: string;
+  body: string;
+  link: string | null;
+  read_at: NullableTimestamp;
+  created_at: Generated<Date>;
+}
+
+export interface AuditLogTable {
+  id: Generated<number>;
+  actor_id: number | null;
+  action: string;
+  entity_type: string;
+  entity_id: string | null;
+  metadata: Json<Record<string, unknown>>;
+  ip: string | null;
+  created_at: Generated<Date>;
+}
+
 export interface Database {
   users: UsersTable;
   refresh_tokens: RefreshTokensTable;
@@ -172,6 +194,8 @@ export interface Database {
   cart_items: CartItemsTable;
   orders: OrdersTable;
   order_items: OrderItemsTable;
+  notifications: NotificationsTable;
+  audit_log: AuditLogTable;
 }
 
 export type User = Selectable<UsersTable>;
@@ -184,3 +208,4 @@ export type Review = Selectable<ReviewsTable>;
 export type Order = Selectable<OrdersTable>;
 export type OrderItem = Selectable<OrderItemsTable>;
 export type Category = Selectable<CategoriesTable>;
+export type Notification = Selectable<NotificationsTable>;
