@@ -53,6 +53,16 @@ export const notificationsService = {
     return { items: rows.map(toNotification), meta: pageMeta(opts.page, opts.pageSize, Number(count)) };
   },
 
+  async unreadCount(userId: number) {
+    const { count } = await db
+      .selectFrom('notifications')
+      .select((eb) => eb.fn.countAll<number>().as('count'))
+      .where('user_id', '=', userId)
+      .where('read_at', 'is', null)
+      .executeTakeFirstOrThrow();
+    return Number(count);
+  },
+
   async markRead(userId: number, id: number) {
     const result = await db
       .updateTable('notifications')
@@ -61,5 +71,15 @@ export const notificationsService = {
       .where('user_id', '=', userId)
       .executeTakeFirst();
     if (Number(result.numUpdatedRows) === 0) throw notFound('Notification');
+  },
+
+  async markAllRead(userId: number) {
+    const result = await db
+      .updateTable('notifications')
+      .set({ read_at: new Date() })
+      .where('user_id', '=', userId)
+      .where('read_at', 'is', null)
+      .executeTakeFirst();
+    return Number(result.numUpdatedRows);
   },
 };

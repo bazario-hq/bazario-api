@@ -53,6 +53,20 @@ route(
   notificationsRouter,
   mount,
   {
+    method: 'get',
+    path: '/unread-count',
+    summary: 'Number of unread notifications (polled by the header badge)',
+    tags,
+    auth: 'required',
+    responses: { 200: { description: 'Count', schema: z.object({ count: z.number().int() }) } },
+  },
+  async ({ user }) => ({ count: await notificationsService.unreadCount(user.id) }),
+);
+
+route(
+  notificationsRouter,
+  mount,
+  {
     method: 'post',
     path: '/{id}/read',
     summary: 'Mark a notification as read',
@@ -64,4 +78,18 @@ route(
   async ({ user, params }) => {
     await notificationsService.markRead(user.id, params.id);
   },
+);
+
+route(
+  notificationsRouter,
+  mount,
+  {
+    method: 'post',
+    path: '/read-all',
+    summary: 'Mark all notifications as read',
+    tags,
+    auth: 'required',
+    responses: { 200: { description: 'Updated count', schema: z.object({ updated: z.number().int() }) } },
+  },
+  async ({ user }) => ({ updated: await notificationsService.markAllRead(user.id) }),
 );
