@@ -50,6 +50,10 @@ function withToken(user: { id: number; email: string; name: string; role: UserRo
   return { id: user.id, email: user.email, name: user.name, role: user.role, token, auth: { Authorization: `Bearer ${token}` } };
 }
 
+export async function createAdmin() {
+  return createUser({ role: 'admin' });
+}
+
 export async function createSeller(overrides: { storeName?: string; status?: 'pending' | 'active' | 'suspended' } = {}) {
   const user = await createUser({ role: overrides.status === 'pending' ? 'buyer' : 'seller' });
   const n = next();

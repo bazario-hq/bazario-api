@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { adminRouter } from './modules/admin/admin.routes.js';
 import { authRouter } from './modules/auth/auth.routes.js';
 import { cartRouter } from './modules/cart/cart.routes.js';
 import { catalogRouter } from './modules/catalog/catalog.routes.js';
@@ -22,3 +23,4 @@ apiRouter.use('/checkout', checkoutRouter);
 apiRouter.use('/orders', ordersRouter);
 apiRouter.use('/notifications', notificationsRouter);
 apiRouter.use('/seller', sellerRouter);
+apiRouter.use('/admin', adminRouter);
