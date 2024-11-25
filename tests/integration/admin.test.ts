@@ -20,4 +20,21 @@ describe('admin', () => {
 
   describe('sellers', () => {
   });
+
+  describe('audit log', () => {
+    it('lists entries newest first and filters by entity type', async () => {
+      const admin = await createAdmin();
+      const user = await createUser();
+      await api().patch(`/api/admin/users/${user.id}`).set(admin.auth).send({ status: 'suspended' });
+      await api().patch(`/api/admin/users/${user.id}`).set(admin.auth).send({ status: 'active' });
+
+      const res = await api().get('/api/admin/audit-log').query({ entityType: 'user' }).set(admin.auth);
+      expect(res.body.items).toHaveLength(2);
+      expect(res.body.items[0].metadata).toEqual({ status: 'active' });
+      expect(res.body.items[0].actor).toEqual({ id: admin.id, email: admin.email });
+
+      const none = await api().get('/api/admin/audit-log').query({ entityType: 'product' }).set(admin.auth);
+      expect(none.body.items).toEqual([]);
+    });
+  });
 });

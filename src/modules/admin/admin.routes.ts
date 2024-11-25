@@ -147,6 +147,44 @@ const adminService = {
     await recordAudit(req, { action: 'admin.seller.status', entityType: 'seller', entityId: id, metadata: { from: seller.status, to: status } });
     return { id, status };
   },
+
+  async auditLog(opts: { actorId?: number; entityType?: string; page: number; pageSize: number }) {
+    let q = db.selectFrom('audit_log').leftJoin('users', 'users.id', 'audit_log.actor_id');
+    if (opts.actorId) q = q.where('audit_log.actor_id', '=', opts.actorId);
+    if (opts.entityType) q = q.where('audit_log.entity_type', '=', opts.entityType);
+
+    const rows = await q
+      .select([
+        'audit_log.id',
+        'audit_log.action',
+        'audit_log.entity_type',
+        'audit_log.entity_id',
+        'audit_log.metadata',
+        'audit_log.ip',
+        'audit_log.created_at',
+        'audit_log.actor_id',
+        'users.email as actor_email',
+      ])
+      .orderBy('audit_log.id', 'desc')
+      .limit(opts.pageSize)
+      .offset((opts.page - 1) * opts.pageSize)
+      .execute();
+    const { count } = await q.select((eb) => eb.fn.countAll<number>().as('count')).executeTakeFirstOrThrow();
+
+    return {
+      items: rows.map((r) => ({
+        id: r.id,
+        action: r.action,
+        entityType: r.entity_type,
+        entityId: r.entity_id,
+        metadata: r.metadata as Record<string, unknown>,
+        ip: r.ip,
+        actor: r.actor_id ? { id: r.actor_id, email: r.actor_email ?? '' } : null,
+        createdAt: r.created_at.toISOString(),
+      })),
+      meta: pageMeta(opts.page, opts.pageSize, Number(count)),
+    };
+  },
 };
 
 export const adminRouter = Router();
@@ -183,6 +221,20 @@ const AdminSeller = registry.register(
     productCount: z.number().int(),
     createdAt: z.string(),
     approvedAt: z.string().nullable(),
+  }),
+);
+
+const AuditEntry = registry.register(
+  'AuditEntry',
+  z.object({
+    id: z.number().int(),
+    action: z.string(),
+    entityType: z.string(),
+    entityId: z.string().nullable(),
+    metadata: z.record(z.unknown()),
+    ip: z.string().nullable(),
+    actor: z.object({ id: z.number().int(), email: z.string() }).nullable(),
+    createdAt: z.string(),
   }),
 );
 
@@ -257,4 +309,23 @@ route(
     },
   },
   ({ req, params, body }) => adminService.updateSellerStatus(req, params.id, body.status),
+);
+
+route(
+  adminRouter,
+  mount,
+  {
+    method: 'get',
+    path: '/audit-log',
+    summary: 'Audit trail of sensitive actions',
+    tags,
+    roles,
+    query: z.object({
+      actorId: z.coerce.number().int().positive().optional(),
+      entityType: z.string().max(50).optional(),
+      ...pageParams,
+    }),
+    responses: { 200: { description: 'Entries', schema: z.object({ items: z.array(AuditEntry), meta: PageMeta }) } },
+  },
+  ({ query }) => adminService.auditLog(query),
 );
