@@ -16,6 +16,10 @@ describe('admin', () => {
   useTestDb();
 
   describe('users', () => {
+    it('does not let admins change their own account', async () => {
+      const admin = await createAdmin();
+      expect((await api().patch(`/api/admin/users/${admin.id}`).set(admin.auth).send({ role: 'buyer' })).status).toBe(400);
+    });
   });
 
   describe('sellers', () => {
