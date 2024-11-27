@@ -122,4 +122,16 @@ export const ProductDetail = registry.register(
   }),
 );
 
+export const HomeResponse = registry.register(
+  'HomeResponse',
+  z.object({
+    categories: z.array(CategoryRef),
+    trending: z.array(ProductCard),
+    newArrivals: z.array(ProductCard),
+    topRated: z.array(ProductCard),
+    deals: z.array(ProductCard),
+    generatedAt: z.string(),
+  }),
+);
+
 export const SlugParams = z.object({ slug: z.string().min(1) });

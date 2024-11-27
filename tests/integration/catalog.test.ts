@@ -115,4 +115,28 @@ describe('catalog', () => {
       expect(res.body.inWishlist).toBe(false);
     });
   });
+
+  describe('home page', () => {
+    it('builds trending, new arrivals, top rated and deals sections', async () => {
+      const cat = await createCategory({ name: 'Electronics', slug: 'electronics' });
+      const { seller } = await createSeller();
+      const hot = await createProduct(seller.id, cat.id, { name: 'Hot', priceCents: 1000 });
+      const warm = await createProduct(seller.id, cat.id, { name: 'Warm', priceCents: 1000 });
+      const stale = await createProduct(seller.id, cat.id, { name: 'Stale', priceCents: 1000 });
+      const rated = await createProduct(seller.id, cat.id, { ratingAvg: 4.9, ratingCount: 20 });
+      const deal = await createProduct(seller.id, cat.id, { priceCents: 500, compareAtCents: 1000 });
+      const buyer = await createUser();
+      await createOrder(buyer.id, [{ product: hot, quantity: 5 }, { product: warm, quantity: 2 }]);
+      await createOrder(buyer.id, [{ product: stale, quantity: 50 }], { createdAt: new Date(Date.now() - 30 * 86_400_000) });
+
+      const res = await api().get('/api/home');
+      expect(res.status).toBe(200);
+      expectSchema(HomeResponse, res.body);
+      expect(res.body.categories.map((c: { slug: string }) => c.slug)).toEqual(['electronics']);
+      expect(res.body.trending.map((p: { id: number }) => p.id)).toEqual([hot.id, warm.id]);
+      expect(res.body.newArrivals.length).toBe(5);
+      expect(res.body.topRated.map((p: { id: number }) => p.id)).toEqual([rated.id]);
+      expect(res.body.deals.map((p: { id: number }) => p.id)).toEqual([deal.id]);
+    });
+  });
 });

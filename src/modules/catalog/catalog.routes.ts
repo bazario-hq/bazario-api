@@ -4,15 +4,30 @@ import { IdParams } from '../common/schemas.js';
 import {
   CategoryDetail,
   CategoryTree,
+  HomeResponse,
   ProductDetail,
   ProductSearchQuery,
   ProductSearchResponse,
   SlugParams,
 } from './catalog.schemas.js';
 import { categoriesService } from './categories.service.js';
+import { homeService } from './home.service.js';
 import { productsService } from './products.service.js';
 
 export const catalogRouter = Router();
+
+route(
+  catalogRouter,
+  '',
+  {
+    method: 'get',
+    path: '/home',
+    summary: 'Home page sections',
+    tags: ['Catalog'],
+    responses: { 200: { description: 'Home page', schema: HomeResponse } },
+  },
+  () => homeService.get(),
+);
 
 route(
   catalogRouter,
