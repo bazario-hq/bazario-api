@@ -1,4 +1,6 @@
+import cors from 'cors';
 import express, { Router } from 'express';
+import helmet from 'helmet';
 import { config } from './config.js';
 import { sql } from 'kysely';
 import { db } from './db/index.js';
@@ -17,6 +19,14 @@ export function createApp() {
   app.disable('x-powered-by');
   app.set('etag', false);
   app.set('trust proxy', 1);
+
+  app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
+  app.use(
+    cors({
+      origin: [config.WEB_URL],
+      credentials: true,
+    }),
+  );
 
   // Infra endpoints stay outside the request logger and metrics.
   const infra = Router();

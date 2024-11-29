@@ -31,6 +31,8 @@ const schema = z.object({
   SMTP_PORT: z.coerce.number().default(1025),
   MAIL_FROM: z.string().default('Bazario <no-reply@bazario.example>'),
 
+  WEB_URL: z.string().default('http://localhost:5173'),
+
   PAYMENT_LATENCY_MS: z.coerce.number().default(250),
 });
 
