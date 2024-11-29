@@ -9,4 +9,12 @@ describe('infra endpoints', () => {
     expect(res.status).toBe(200);
     expect(res.body.status).toBe('ok');
   });
+
+  it('exposes prometheus metrics', async () => {
+    await api().get('/api/categories');
+    const res = await api().get('/metrics');
+    expect(res.status).toBe(200);
+    expect(res.text).toContain('http_requests_total');
+    expect(res.text).toContain('http_request_duration_seconds_bucket');
+  });
 });
