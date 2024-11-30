@@ -35,6 +35,11 @@ describe('auth', () => {
   });
 
   describe('login', () => {
+    it('refuses suspended accounts', async () => {
+      const user = await createUser({ status: 'suspended' });
+      const res = await api().post('/api/auth/login').send({ email: user.email, password: PASSWORD });
+      expect(res.status).toBe(403);
+    });
   });
 
   describe('refresh tokens', () => {
