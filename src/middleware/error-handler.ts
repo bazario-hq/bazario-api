@@ -18,6 +18,9 @@ export function errorHandler(err: unknown, req: Request, res: Response, _next: N
   if (err instanceof multer.MulterError) {
     return res.status(400).json({ error: { code: 'bad_request', message: err.message } });
   }
+  if (err instanceof SyntaxError && 'body' in err) {
+    return res.status(400).json({ error: { code: 'bad_request', message: 'Malformed JSON body' } });
+  }
 
   logger.error({ err, path: req.path }, 'unhandled error');
   res.status(500).json({ error: { code: 'internal', message: 'Something went wrong' } });
