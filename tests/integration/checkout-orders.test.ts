@@ -84,6 +84,15 @@ describe('checkout and orders', () => {
     expect(res.status).toBe(409);
   });
 
+  it('fails cleanly when stock ran out after quoting', async () => {
+    await fillCart();
+    const q = await quote();
+    await db.updateTable('products').set({ stock: 1 }).where('id', '=', lamp.id).execute();
+    const res = await api().post('/api/checkout/confirm').set(buyer.auth).send({ quoteId: q.quoteId, payment: goodCard });
+    expect(res.status).toBe(409);
+    expect(res.body.error.message).toBe('Only 1 left of Lamp');
+  });
+
   it('rejects unknown quotes and quotes belonging to someone else', async () => {
     await fillCart();
     const q = await quote();
