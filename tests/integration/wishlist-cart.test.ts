@@ -71,5 +71,13 @@ describe('wishlist and cart', () => {
       expect(res.status).toBe(422);
       expect(res.body.error.details).toEqual({ available: 3 });
     });
+
+    it('flags items that became unavailable and leaves them out of the total', async () => {
+      await api().put(`/api/cart/items/${product.id}`).set(buyer.auth).send({ quantity: 2 });
+      await db.updateTable('products').set({ stock: 1 }).where('id', '=', product.id).execute();
+      const res = await api().get('/api/cart').set(buyer.auth);
+      expect(res.body.items[0].available).toBe(false);
+      expect(res.body.subtotalCents).toBe(0);
+    });
   });
 });
