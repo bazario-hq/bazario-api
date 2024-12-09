@@ -106,6 +106,37 @@ describe('checkout and orders', () => {
     expect(unknown.status).toBe(410);
   });
 
+  describe('order history', () => {
+    it('lists the buyer orders newest first with items and images', async () => {
+      await addImage(lamp.id);
+      const first = await createOrder(buyer.id, [{ product: lamp, quantity: 1 }], { createdAt: new Date('2026-01-01') });
+      const second = await createOrder(buyer.id, [{ product: mug, quantity: 2 }, { product: lamp, quantity: 1 }], {
+        createdAt: new Date('2026-02-01'),
+      });
+      const someoneElse = await createUser();
+      await createOrder(someoneElse.id, [{ product: mug, quantity: 1 }]);
+
+      const res = await api().get('/api/orders').set(buyer.auth);
+      expect(res.status).toBe(200);
+      expectSchema(OrderList, res.body);
+      expect(res.body.items.map((o: { id: number }) => o.id)).toEqual([second.id, first.id]);
+      expect(res.body.meta.total).toBe(2);
+      expect(res.body.items[0].items).toHaveLength(2);
+      expect(res.body.items[1].items[0].image).not.toBeNull();
+      expect(res.body.items[0].items[0].seller.storeName).toBe('Mug House');
+
+      const page2 = await api().get('/api/orders').query({ page: 2, pageSize: 1 }).set(buyer.auth);
+      expect(page2.body.items.map((o: { id: number }) => o.id)).toEqual([first.id]);
+    });
+
+    it('shows a single order only to its buyer', async () => {
+      const order = await createOrder(buyer.id, [{ product: lamp, quantity: 1 }]);
+      const other = await createUser();
+      expect((await api().get(`/api/orders/${order.id}`).set(buyer.auth)).status).toBe(200);
+      expect((await api().get(`/api/orders/${order.id}`).set(other.auth)).status).toBe(404);
+    });
+  });
+
   describe('cancellation', () => {
     it('cancels an unshipped order, restores stock and tells the sellers', async () => {
       await fillCart();
