@@ -106,6 +106,13 @@ describe('checkout and orders', () => {
     expect(unknown.status).toBe(410);
   });
 
+  it('cannot confirm the same quote twice', async () => {
+    await fillCart();
+    const q = await quote();
+    expect((await api().post('/api/checkout/confirm').set(buyer.auth).send({ quoteId: q.quoteId, payment: goodCard })).status).toBe(201);
+    expect((await api().post('/api/checkout/confirm').set(buyer.auth).send({ quoteId: q.quoteId, payment: goodCard })).status).toBe(410);
+  });
+
   describe('order history', () => {
     it('lists the buyer orders newest first with items and images', async () => {
       await addImage(lamp.id);
