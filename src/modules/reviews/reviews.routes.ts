@@ -42,3 +42,36 @@ route(
   },
   ({ user, params, body }) => reviewsService.create(user.id, params.id, body),
 );
+
+route(
+  reviewsRouter,
+  '',
+  {
+    method: 'patch',
+    path: '/reviews/{id}',
+    summary: 'Edit your review',
+    tags,
+    auth: 'required',
+    params: IdParams,
+    body: UpdateReviewBody,
+    responses: { 200: { description: 'Updated', schema: ReviewSchema } },
+  },
+  ({ user, params, body }) => reviewsService.update(user.id, params.id, body),
+);
+
+route(
+  reviewsRouter,
+  '',
+  {
+    method: 'delete',
+    path: '/reviews/{id}',
+    summary: 'Delete your review',
+    tags,
+    auth: 'required',
+    params: IdParams,
+    responses: { 204: { description: 'Deleted' } },
+  },
+  async ({ user, params }) => {
+    await reviewsService.remove(user.id, user.role, params.id);
+  },
+);

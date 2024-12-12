@@ -55,4 +55,25 @@ export const reviewsService = {
     }
     return toReview((await reviewsRepository.findById(id))!);
   },
+
+  async update(userId: number, reviewId: number, input: { rating?: number; title?: string; body?: string }) {
+    const review = await reviewsRepository.findById(reviewId);
+    if (!review) throw notFound('Review');
+    if (review.user_id !== userId) throw forbidden();
+
+    const title = input.title ?? review.title;
+    const body = input.body ?? review.body;
+    const status = needsModeration(`${title}\n${body}`) ? 'pending' : 'published';
+    await reviewsRepository.update(reviewId, { ...input, status });
+    await reviewsRepository.refreshProductRating(review.product_id);
+    return toReview((await reviewsRepository.findById(reviewId))!);
+  },
+
+  async remove(userId: number, role: string, reviewId: number) {
+    const review = await reviewsRepository.findById(reviewId);
+    if (!review) throw notFound('Review');
+    if (review.user_id !== userId && role !== 'admin') throw forbidden();
+    await reviewsRepository.delete(reviewId);
+    await reviewsRepository.refreshProductRating(review.product_id);
+  },
 };
