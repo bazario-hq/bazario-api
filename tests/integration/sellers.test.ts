@@ -26,4 +26,11 @@ describe('sellers', () => {
     const res = await api().post('/api/sellers/apply').set(b.auth).send({ storeName: 'Spice Box' });
     expect(res.body.slug).toMatch(/^spice-box-[a-z0-9]+$/);
   });
+
+  it('hides pending and suspended stores', async () => {
+    const pending = await createSeller({ status: 'pending' });
+    const suspended = await createSeller({ status: 'suspended' });
+    expect((await api().get(`/api/sellers/${pending.seller.slug}`)).status).toBe(404);
+    expect((await api().get(`/api/sellers/${suspended.seller.slug}`)).status).toBe(404);
+  });
 });
