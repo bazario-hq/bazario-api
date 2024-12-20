@@ -49,5 +49,13 @@ describe('reviews', () => {
         .send({ rating: 1, title: 'Meh', body: 'Never bought it' });
       expect(res.status).toBe(403);
     });
+
+    it('allows only one review per product', async () => {
+      const buyer = await createUser();
+      await createOrder(buyer.id, [{ product, quantity: 1 }]);
+      const body = { rating: 5, title: 'Great', body: 'Great lamp' };
+      expect((await api().post(`/api/products/${product.id}/reviews`).set(buyer.auth).send(body)).status).toBe(201);
+      expect((await api().post(`/api/products/${product.id}/reviews`).set(buyer.auth).send(body)).status).toBe(409);
+    });
   });
 });
