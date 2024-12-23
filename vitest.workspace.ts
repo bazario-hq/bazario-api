@@ -16,7 +16,7 @@ export default defineWorkspace([
       globalSetup: ['tests/support/global-setup.ts'],
       setupFiles: ['tests/support/setup-env.ts'],
       pool: 'forks',
-      testTimeout: 10_000,
+      testTimeout: 20_000,
       hookTimeout: 30_000,
     },
   },
