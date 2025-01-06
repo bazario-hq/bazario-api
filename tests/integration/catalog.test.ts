@@ -86,6 +86,26 @@ describe('catalog', () => {
       expect(res.body.items.map((p: { id: number }) => p.id).sort()).toEqual([a.id, b.id].sort());
       expect(res.body.meta.total).toBe(2);
     });
+
+    it('filters by seller, price, rating and stock', async () => {
+      const other = await createSeller();
+      const cheap = await createProduct(seller.seller.id, shoes.id, { priceCents: 500, ratingAvg: 4.5, ratingCount: 3 });
+      const mid = await createProduct(seller.seller.id, shoes.id, { priceCents: 2500, ratingAvg: 3.9, ratingCount: 9, stock: 0 });
+      await createProduct(seller.seller.id, shoes.id, { priceCents: 9900, ratingAvg: 5, ratingCount: 1 });
+      await createProduct(other.seller.id, shoes.id, { priceCents: 700 });
+
+      const bySeller = await api().get('/api/products').query({ seller: seller.seller.slug });
+      expect(bySeller.body.meta.total).toBe(3);
+
+      const byPrice = await api().get('/api/products').query({ seller: seller.seller.slug, minPrice: 400, maxPrice: 3000 });
+      expect(byPrice.body.items.map((p: { id: number }) => p.id).sort()).toEqual([cheap.id, mid.id].sort());
+
+      const byRating = await api().get('/api/products').query({ minRating: 4.5 });
+      expect(byRating.body.meta.total).toBe(2);
+
+      const inStock = await api().get('/api/products').query({ seller: seller.seller.slug, maxPrice: 3000, inStock: 'true' });
+      expect(inStock.body.items.map((p: { id: number }) => p.id)).toEqual([cheap.id]);
+    });
   });
 
   describe('product detail', () => {
