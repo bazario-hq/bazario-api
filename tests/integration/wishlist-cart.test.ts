@@ -79,5 +79,11 @@ describe('wishlist and cart', () => {
       expect(res.body.items[0].available).toBe(false);
       expect(res.body.subtotalCents).toBe(0);
     });
+
+    it('keeps carts separate per user', async () => {
+      const other = await createUser();
+      await api().put(`/api/cart/items/${product.id}`).set(buyer.auth).send({ quantity: 1 });
+      expect((await api().get('/api/cart').set(other.auth)).body.items).toEqual([]);
+    });
   });
 });
