@@ -11,13 +11,17 @@ import { toSellerProfile } from '../sellers/sellers.routes.js';
 import { SellerProfile } from '../sellers/sellers.schemas.js';
 import { currentSeller, loadSeller } from './seller.context.js';
 import {
+  BulkInventoryBody,
   CreateProductBody,
+  InventoryAdjustment,
+  InventoryRow,
   SellerOrderDetail,
   SellerOrderSummary,
   SellerProductList,
   SellerProductSchema,
   UpdateProductBody,
 } from './seller.schemas.js';
+import { sellerInventoryService } from './seller-inventory.service.js';
 import { sellerOrdersService } from './seller-orders.service.js';
 import { sellerProductsService } from './seller-products.service.js';
 
@@ -42,6 +46,7 @@ const ProductImageParams = z.object({
   imageId: z.coerce.number().int().positive(),
 });
 const OrderIdParams = z.object({ orderId: z.coerce.number().int().positive() });
+const ProductIdParams = z.object({ productId: z.coerce.number().int().positive() });
 const pageParams = {
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(20),
@@ -213,6 +218,70 @@ route(
 );
 
 // Inventory
+
+route(
+  sellerRouter,
+  mount,
+  {
+    method: 'get',
+    path: '/inventory',
+    summary: 'Stock levels, lowest first',
+    tags,
+    auth,
+    query: z.object({
+      lowStock: z
+        .enum(['true', 'false'])
+        .optional()
+        .transform((v) => v === 'true'),
+      ...pageParams,
+    }),
+    responses: {
+      200: { description: 'Inventory', schema: z.object({ items: z.array(InventoryRow), meta: PageMeta }) },
+    },
+  },
+  ({ res, query }) => sellerInventoryService.list(currentSeller(res).id, query),
+);
+
+route(
+  sellerRouter,
+  mount,
+  {
+    method: 'post',
+    path: '/inventory/bulk',
+    summary: 'Set stock for many products at once',
+    tags,
+    auth,
+    body: BulkInventoryBody,
+    responses: {
+      200: {
+        description: 'Updated',
+        schema: z.object({
+          updated: z.number().int(),
+          items: z.array(
+            z.object({ productId: z.number().int(), previousStock: z.number().int(), stock: z.number().int() }),
+          ),
+        }),
+      },
+      404: { description: 'A product does not exist or is not yours' },
+    },
+  },
+  ({ req, res, body }) => sellerInventoryService.bulkSet(currentSeller(res).id, req.user!.id, body.items, body.reason),
+);
+
+route(
+  sellerRouter,
+  mount,
+  {
+    method: 'get',
+    path: '/inventory/{productId}/history',
+    summary: 'Recent stock changes for a product',
+    tags,
+    auth,
+    params: ProductIdParams,
+    responses: { 200: { description: 'History', schema: z.object({ items: z.array(InventoryAdjustment) }) } },
+  },
+  ({ res, params }) => sellerInventoryService.history(currentSeller(res).id, params.productId),
+);
 
 // Orders
 

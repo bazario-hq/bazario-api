@@ -54,6 +54,38 @@ export const UpdateProductBody = z.object({
   status: z.enum(['draft', 'active', 'archived']).optional(),
 });
 
+export const InventoryRow = registry.register(
+  'InventoryRow',
+  z.object({
+    productId: z.number().int(),
+    name: z.string(),
+    status: z.enum(['draft', 'active', 'archived']),
+    stock: z.number().int(),
+    lowStockThreshold: z.number().int(),
+    lowStock: z.boolean(),
+    updatedAt: z.string(),
+  }),
+);
+
+export const BulkInventoryBody = z.object({
+  items: z
+    .array(z.object({ productId: z.number().int().positive(), stock: z.number().int().min(0).max(1_000_000) }))
+    .min(1)
+    .max(1000),
+  reason: z.string().max(200).default('bulk update'),
+});
+
+export const InventoryAdjustment = registry.register(
+  'InventoryAdjustment',
+  z.object({
+    id: z.number().int(),
+    delta: z.number().int(),
+    stockAfter: z.number().int(),
+    reason: z.string(),
+    createdAt: z.string(),
+  }),
+);
+
 export const SellerOrderSummary = registry.register(
   'SellerOrderSummary',
   z.object({

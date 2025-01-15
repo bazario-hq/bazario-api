@@ -132,6 +132,9 @@ describe('seller area', () => {
     });
   });
 
+  describe('inventory', () => {
+  });
+
   describe('orders', () => {
     it('lists orders with the seller items and ships them', async () => {
       const mine = await createProduct(seller.seller.id, categoryId, { name: 'Rug', priceCents: 3000 });

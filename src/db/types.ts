@@ -84,6 +84,7 @@ export interface ProductsTable {
   compare_at_cents: number | null;
   currency: Generated<string>;
   stock: Generated<number>;
+  low_stock_threshold: Generated<number>;
   status: Generated<ProductStatus>;
   rating_avg: Generated<number>;
   rating_count: Generated<number>;
@@ -182,6 +183,16 @@ export interface AuditLogTable {
   created_at: Generated<Date>;
 }
 
+export interface InventoryAdjustmentsTable {
+  id: Generated<number>;
+  product_id: number;
+  delta: number;
+  stock_after: number;
+  reason: string;
+  actor_id: number | null;
+  created_at: Generated<Date>;
+}
+
 export interface Database {
   users: UsersTable;
   refresh_tokens: RefreshTokensTable;
@@ -196,6 +207,7 @@ export interface Database {
   order_items: OrderItemsTable;
   notifications: NotificationsTable;
   audit_log: AuditLogTable;
+  inventory_adjustments: InventoryAdjustmentsTable;
 }
 
 export type User = Selectable<UsersTable>;
