@@ -121,3 +121,31 @@ export const SellerOrderDetail = registry.register(
     ),
   }),
 );
+
+export const DashboardQuery = z.object({ range: z.enum(['7d', '30d', '90d']).default('30d') });
+
+const Kpis = z.object({
+  revenueCents: z.number().int(),
+  orders: z.number().int(),
+  units: z.number().int(),
+  averageOrderCents: z.number().int(),
+  customers: z.number().int(),
+});
+
+export const DashboardSchema = registry.register(
+  'SellerDashboard',
+  z.object({
+    range: z.object({ from: z.string(), to: z.string() }),
+    kpis: Kpis,
+    previous: Kpis,
+    salesByDay: z.array(z.object({ date: z.string(), revenueCents: z.number().int(), orders: z.number().int() })),
+    topProducts: z.array(
+      z.object({ productId: z.number().int(), name: z.string(), units: z.number().int(), revenueCents: z.number().int() }),
+    ),
+    lowStock: z.object({
+      count: z.number().int(),
+      items: z.array(z.object({ productId: z.number().int(), name: z.string(), stock: z.number().int() })),
+    }),
+    pendingShipments: z.number().int(),
+  }),
+);

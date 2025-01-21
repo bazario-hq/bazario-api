@@ -175,6 +175,32 @@ describe('seller area', () => {
     });
   });
 
+  describe('dashboard', () => {
+    it('summarises revenue, orders, customers and trends', async () => {
+      const rug = await createProduct(seller.seller.id, categoryId, { name: 'Rug', priceCents: 1000 });
+      const mat = await createProduct(seller.seller.id, categoryId, { name: 'Mat', priceCents: 500, stock: 1 });
+      const b1 = await createUser();
+      const b2 = await createUser();
+      const now = Date.now();
+
+      await createOrder(b1.id, [{ product: rug, quantity: 2 }], { createdAt: new Date(now - 1 * DAY) });
+      await createOrder(b2.id, [{ product: rug, quantity: 1 }, { product: mat, quantity: 4 }], { createdAt: new Date(now - 2 * DAY) });
+      await createOrder(b2.id, [{ product: rug, quantity: 9, status: 'cancelled' }], { createdAt: new Date(now - 2 * DAY) });
+      await createOrder(b1.id, [{ product: mat, quantity: 1 }], { createdAt: new Date(now - 10 * DAY) });
+
+      const res = await api().get('/api/seller/dashboard').query({ range: '7d' }).set(seller.user.auth);
+      expect(res.status).toBe(200);
+      expectSchema(DashboardSchema, res.body);
+      expect(res.body.kpis).toEqual({ revenueCents: 5000, orders: 2, units: 7, averageOrderCents: 2500, customers: 2 });
+      expect(res.body.previous).toEqual({ revenueCents: 500, orders: 1, units: 1, averageOrderCents: 500, customers: 1 });
+      expect(res.body.salesByDay).toHaveLength(7);
+      expect(res.body.salesByDay.reduce((s: number, d: { revenueCents: number }) => s + d.revenueCents, 0)).toBe(5000);
+      expect(res.body.topProducts.map((p: { name: string }) => p.name)).toEqual(['Rug', 'Mat']);
+      expect(res.body.lowStock).toEqual({ count: 1, items: [{ productId: mat.id, name: 'Mat', stock: 1 }] });
+      expect(res.body.pendingShipments).toBe(3);
+    });
+  });
+
   describe('payouts and exports', () => {
   });
 });

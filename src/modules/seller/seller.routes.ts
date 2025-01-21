@@ -13,6 +13,8 @@ import { currentSeller, loadSeller } from './seller.context.js';
 import {
   BulkInventoryBody,
   CreateProductBody,
+  DashboardQuery,
+  DashboardSchema,
   InventoryAdjustment,
   InventoryRow,
   SellerOrderDetail,
@@ -21,6 +23,7 @@ import {
   SellerProductSchema,
   UpdateProductBody,
 } from './seller.schemas.js';
+import { sellerDashboardService } from './seller-dashboard.service.js';
 import { sellerInventoryService } from './seller-inventory.service.js';
 import { sellerOrdersService } from './seller-orders.service.js';
 import { sellerProductsService } from './seller-products.service.js';
@@ -88,6 +91,21 @@ route(
 );
 
 // Dashboard
+
+route(
+  sellerRouter,
+  mount,
+  {
+    method: 'get',
+    path: '/dashboard',
+    summary: 'Sales KPIs and charts for your store',
+    tags,
+    auth,
+    query: DashboardQuery,
+    responses: { 200: { description: 'Dashboard', schema: DashboardSchema } },
+  },
+  ({ res, query }) => sellerDashboardService.get(currentSeller(res).id, query.range),
+);
 
 // Products
 

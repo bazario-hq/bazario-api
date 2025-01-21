@@ -1644,6 +1644,174 @@
           "totalCents",
           "items"
         ]
+      },
+      "SellerDashboard": {
+        "type": "object",
+        "properties": {
+          "range": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ]
+          },
+          "kpis": {
+            "type": "object",
+            "properties": {
+              "revenueCents": {
+                "type": "integer"
+              },
+              "orders": {
+                "type": "integer"
+              },
+              "units": {
+                "type": "integer"
+              },
+              "averageOrderCents": {
+                "type": "integer"
+              },
+              "customers": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "revenueCents",
+              "orders",
+              "units",
+              "averageOrderCents",
+              "customers"
+            ]
+          },
+          "previous": {
+            "type": "object",
+            "properties": {
+              "revenueCents": {
+                "type": "integer"
+              },
+              "orders": {
+                "type": "integer"
+              },
+              "units": {
+                "type": "integer"
+              },
+              "averageOrderCents": {
+                "type": "integer"
+              },
+              "customers": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "revenueCents",
+              "orders",
+              "units",
+              "averageOrderCents",
+              "customers"
+            ]
+          },
+          "salesByDay": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "date": {
+                  "type": "string"
+                },
+                "revenueCents": {
+                  "type": "integer"
+                },
+                "orders": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "date",
+                "revenueCents",
+                "orders"
+              ]
+            }
+          },
+          "topProducts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "productId": {
+                  "type": "integer"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "units": {
+                  "type": "integer"
+                },
+                "revenueCents": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "productId",
+                "name",
+                "units",
+                "revenueCents"
+              ]
+            }
+          },
+          "lowStock": {
+            "type": "object",
+            "properties": {
+              "count": {
+                "type": "integer"
+              },
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "productId": {
+                      "type": "integer"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "stock": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "productId",
+                    "name",
+                    "stock"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "count",
+              "items"
+            ]
+          },
+          "pendingShipments": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "range",
+          "kpis",
+          "previous",
+          "salesByDay",
+          "topProducts",
+          "lowStock",
+          "pendingShipments"
+        ]
       }
     },
     "parameters": {}
@@ -4089,6 +4257,68 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SellerProfile"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/seller/dashboard": {
+      "get": {
+        "summary": "Sales KPIs and charts for your store",
+        "tags": [
+          "Seller"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "7d",
+                "30d",
+                "90d",
+                "mtd"
+              ],
+              "default": "30d"
+            },
+            "required": false,
+            "name": "range",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dashboard",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SellerDashboard"
                 }
               }
             }
