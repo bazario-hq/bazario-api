@@ -35,6 +35,17 @@ describe('auth', () => {
   });
 
   describe('login', () => {
+    it('rejects a wrong password with a generic message', async () => {
+      const user = await createUser();
+      const res = await api().post('/api/auth/login').send({ email: user.email, password: 'nope-nope' });
+      expect(res.status).toBe(401);
+      expect(res.body.error.message).toBe('Invalid email or password');
+
+      const unknown = await api().post('/api/auth/login').send({ email: 'ghost@example.test', password: 'nope-nope' });
+      expect(unknown.status).toBe(401);
+      expect(unknown.body.error.message).toBe('Invalid email or password');
+    });
+
     it('refuses suspended accounts', async () => {
       const user = await createUser({ status: 'suspended' });
       const res = await api().post('/api/auth/login').send({ email: user.email, password: PASSWORD });
