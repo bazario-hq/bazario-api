@@ -17,4 +17,11 @@ describe('infra endpoints', () => {
     expect(res.text).toContain('http_requests_total');
     expect(res.text).toContain('http_request_duration_seconds_bucket');
   });
+
+  it('serves the OpenAPI document', async () => {
+    const res = await api().get('/openapi.json');
+    expect(res.status).toBe(200);
+    expect(res.body.openapi).toBe('3.0.3');
+    expect(Object.keys(res.body.paths)).toContain('/products/{id}');
+  });
 });
