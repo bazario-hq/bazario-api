@@ -51,6 +51,12 @@ describe('auth', () => {
       const res = await api().post('/api/auth/login').send({ email: user.email, password: PASSWORD });
       expect(res.status).toBe(403);
     });
+
+    it('includes the seller account in the profile of a seller', async () => {
+      const { user, seller } = await createSeller();
+      const res = await api().post('/api/auth/login').send({ email: user.email, password: PASSWORD });
+      expect(res.body.user.seller).toMatchObject({ id: seller.id, status: 'active' });
+    });
   });
 
   describe('refresh tokens', () => {
