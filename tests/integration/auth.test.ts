@@ -35,6 +35,16 @@ describe('auth', () => {
   });
 
   describe('login', () => {
+    it('logs in with the right password and records last login', async () => {
+      const user = await createUser();
+      const res = await api().post('/api/auth/login').send({ email: user.email, password: PASSWORD });
+      expect(res.status).toBe(200);
+      expectSchema(AuthResponse, res.body);
+
+      const row = await db.selectFrom('users').select('last_login_at').where('id', '=', user.id).executeTakeFirstOrThrow();
+      expect(row.last_login_at).not.toBeNull();
+    });
+
     it('rejects a wrong password with a generic message', async () => {
       const user = await createUser();
       const res = await api().post('/api/auth/login').send({ email: user.email, password: 'nope-nope' });
