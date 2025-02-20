@@ -32,6 +32,13 @@ describe('auth', () => {
         .send({ email: 'TAKEN@example.test', password: 'long-enough-pw', name: 'Someone' });
       expect(res.status).toBe(409);
     });
+
+    it('does not store the plain password', async () => {
+      await api().post('/api/auth/signup').send({ email: 'hash@example.test', password: 'long-enough-pw', name: 'H' });
+      const row = await db.selectFrom('users').select('password_hash').where('email', '=', 'hash@example.test').executeTakeFirstOrThrow();
+      expect(row.password_hash).not.toContain('long-enough-pw');
+      expect(row.password_hash).toMatch(/^\$2[aby]\$/);
+    });
   });
 
   describe('login', () => {
