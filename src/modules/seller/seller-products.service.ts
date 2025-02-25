@@ -53,6 +53,22 @@ async function assertCategory(categoryId: number) {
   if (!category) throw badRequest('Unknown category');
 }
 
+async function notifyPriceDrop(product: Product, oldPriceCents: number) {
+  const watchers = await db
+    .selectFrom('wishlist_items')
+    .select('user_id')
+    .where('product_id', '=', product.id)
+    .execute();
+  for (const { user_id } of watchers) {
+    await notificationsService.notify(user_id, {
+      type: 'wishlist.price_drop',
+      title: 'Price drop on your wishlist',
+      body: `${product.name} is now ${formatCents(product.price_cents)} (was ${formatCents(oldPriceCents)})`,
+      link: `/products/${product.id}`,
+    });
+  }
+}
+
 export const sellerProductsService = {
   async list(sellerId: number, opts: { status?: string; q?: string; page: number; pageSize: number }) {
     let q = db.selectFrom('products').where('seller_id', '=', sellerId);
@@ -161,6 +177,10 @@ export const sellerProductsService = {
       entityId: productId,
       metadata: { changes: Object.keys(input) },
     });
+
+    if (updated.status === 'active' && input.priceCents != null && input.priceCents < before.price_cents) {
+      await notifyPriceDrop(updated, before.price_cents);
+    }
 
     return toSellerProduct(updated, await productImagesRepository.forProduct(productId));
   },

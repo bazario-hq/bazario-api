@@ -87,6 +87,22 @@ describe('seller area', () => {
       expect(res.status).toBe(400);
     });
 
+    it('tells wishlisters about a price drop', async () => {
+      const product = await createProduct(seller.seller.id, categoryId, { priceCents: 5000, name: 'Mat' });
+      const fans = [await createUser(), await createUser()];
+      for (const fan of fans) {
+        await db.insertInto('wishlist_items').values({ user_id: fan.id, product_id: product.id }).execute();
+      }
+
+      await api().patch(`/api/seller/products/${product.id}`).set(seller.user.auth).send({ priceCents: 5500 });
+      expect(await db.selectFrom('notifications').selectAll().execute()).toHaveLength(0);
+
+      await api().patch(`/api/seller/products/${product.id}`).set(seller.user.auth).send({ priceCents: 4000 });
+      const notes = await db.selectFrom('notifications').select(['user_id', 'body']).execute();
+      expect(notes.map((n) => n.user_id).sort()).toEqual(fans.map((f) => f.id).sort());
+      expect(notes[0].body).toBe('Mat is now $40.00 (was $55.00)');
+    });
+
     it('uploads images, stores resized variants and serves them', async () => {
       const product = await createProduct(seller.seller.id, categoryId);
       const jpeg = await sharp({ create: { width: 1600, height: 1200, channels: 3, background: '#c0392b' } }).jpeg().toBuffer();
