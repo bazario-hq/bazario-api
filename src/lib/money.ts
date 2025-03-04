@@ -10,5 +10,6 @@ export function formatCents(cents: number, currency = 'USD'): string {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(cents / 100);
 }
 
+export function feeFor(grossCents: number, percent: number): number {
   return Math.round((grossCents * percent) / 100);
 }

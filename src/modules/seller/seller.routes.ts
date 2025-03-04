@@ -17,6 +17,7 @@ import {
   DashboardSchema,
   InventoryAdjustment,
   InventoryRow,
+  PayoutsSchema,
   SellerOrderDetail,
   SellerOrderSummary,
   SellerProductList,
@@ -26,6 +27,7 @@ import {
 import { sellerDashboardService } from './seller-dashboard.service.js';
 import { sellerInventoryService } from './seller-inventory.service.js';
 import { sellerOrdersService } from './seller-orders.service.js';
+import { sellerPayoutsService } from './seller-payouts.service.js';
 import { sellerProductsService } from './seller-products.service.js';
 
 export const sellerRouter = Router();
@@ -371,3 +373,17 @@ route(
 );
 
 // Payouts and exports
+
+route(
+  sellerRouter,
+  mount,
+  {
+    method: 'get',
+    path: '/payouts',
+    summary: 'Monthly earnings and payout status for the last 12 months',
+    tags,
+    auth,
+    responses: { 200: { description: 'Payouts', schema: PayoutsSchema } },
+  },
+  ({ res }) => sellerPayoutsService.summary(currentSeller(res).id),
+);

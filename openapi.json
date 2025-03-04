@@ -1812,6 +1812,78 @@
           "lowStock",
           "pendingShipments"
         ]
+      },
+      "SellerPayouts": {
+        "type": "object",
+        "properties": {
+          "feePercent": {
+            "type": "number"
+          },
+          "months": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "month": {
+                  "type": "string"
+                },
+                "grossCents": {
+                  "type": "integer"
+                },
+                "feeCents": {
+                  "type": "integer"
+                },
+                "netCents": {
+                  "type": "integer"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "open",
+                    "scheduled",
+                    "paid"
+                  ]
+                },
+                "paidAt": {
+                  "type": "string",
+                  "nullable": true
+                }
+              },
+              "required": [
+                "month",
+                "grossCents",
+                "feeCents",
+                "netCents",
+                "status",
+                "paidAt"
+              ]
+            }
+          },
+          "totals": {
+            "type": "object",
+            "properties": {
+              "grossCents": {
+                "type": "integer"
+              },
+              "feeCents": {
+                "type": "integer"
+              },
+              "netCents": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "grossCents",
+              "feeCents",
+              "netCents"
+            ]
+          }
+        },
+        "required": [
+          "feePercent",
+          "months",
+          "totals"
+        ]
       }
     },
     "parameters": {}
@@ -5516,6 +5588,41 @@
           },
           "409": {
             "description": "Nothing to deliver"
+          }
+        }
+      }
+    },
+    "/seller/payouts": {
+      "get": {
+        "summary": "Monthly earnings and payout status for the last 12 months",
+        "tags": [
+          "Seller"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payouts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SellerPayouts"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       }

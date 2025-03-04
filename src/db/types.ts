@@ -10,6 +10,7 @@ export type SellerStatus = 'pending' | 'active' | 'suspended';
 export type ProductStatus = 'draft' | 'active' | 'archived';
 export type OrderStatus = 'paid' | 'partially_shipped' | 'shipped' | 'delivered' | 'cancelled';
 export type OrderItemStatus = 'pending' | 'shipped' | 'delivered' | 'cancelled';
+export type PayoutStatus = 'scheduled' | 'paid';
 
 export interface ShippingAddress {
   fullName: string;
@@ -193,6 +194,18 @@ export interface InventoryAdjustmentsTable {
   created_at: Generated<Date>;
 }
 
+export interface PayoutsTable {
+  id: Generated<number>;
+  seller_id: number;
+  period_month: ColumnType<string, string, string>;
+  gross_cents: number;
+  fee_cents: number;
+  net_cents: number;
+  status: Generated<PayoutStatus>;
+  paid_at: NullableTimestamp;
+  created_at: Generated<Date>;
+}
+
 export interface Database {
   users: UsersTable;
   refresh_tokens: RefreshTokensTable;
@@ -208,6 +221,7 @@ export interface Database {
   notifications: NotificationsTable;
   audit_log: AuditLogTable;
   inventory_adjustments: InventoryAdjustmentsTable;
+  payouts: PayoutsTable;
 }
 
 export type User = Selectable<UsersTable>;

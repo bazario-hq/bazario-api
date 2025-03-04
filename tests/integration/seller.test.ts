@@ -218,5 +218,20 @@ describe('seller area', () => {
   });
 
   describe('payouts and exports', () => {
+    it('summarises shipped sales by month with platform fees', async () => {
+      const rug = await createProduct(seller.seller.id, categoryId, { priceCents: 10000 });
+      const buyer = await createUser();
+      await createOrder(buyer.id, [{ product: rug, quantity: 1, status: 'delivered' }]);
+      await createOrder(buyer.id, [{ product: rug, quantity: 1, status: 'shipped' }]);
+      await createOrder(buyer.id, [{ product: rug, quantity: 1, status: 'pending' }]);
+
+      const res = await api().get('/api/seller/payouts').set(seller.user.auth);
+      expect(res.status).toBe(200);
+      expectSchema(PayoutsSchema, res.body);
+      expect(res.body.months).toHaveLength(12);
+      expect(res.body.months[0]).toMatchObject({ grossCents: 20000, feeCents: 2000, netCents: 18000, status: 'open' });
+      expect(res.body.months[1].status).toBe('scheduled');
+      expect(res.body.totals).toEqual({ grossCents: 20000, feeCents: 2000, netCents: 18000 });
+    });
   });
 });

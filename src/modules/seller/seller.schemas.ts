@@ -149,3 +149,21 @@ export const DashboardSchema = registry.register(
     pendingShipments: z.number().int(),
   }),
 );
+
+export const PayoutsSchema = registry.register(
+  'SellerPayouts',
+  z.object({
+    feePercent: z.number(),
+    months: z.array(
+      z.object({
+        month: z.string(),
+        grossCents: z.number().int(),
+        feeCents: z.number().int(),
+        netCents: z.number().int(),
+        status: z.enum(['open', 'scheduled', 'paid']),
+        paidAt: z.string().nullable(),
+      }),
+    ),
+    totals: z.object({ grossCents: z.number().int(), feeCents: z.number().int(), netCents: z.number().int() }),
+  }),
+);

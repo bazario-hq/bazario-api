@@ -34,6 +34,7 @@ const schema = z.object({
   WEB_URL: z.string().default('http://localhost:5173'),
 
   PAYMENT_LATENCY_MS: z.coerce.number().default(250),
+  PLATFORM_FEE_PERCENT: z.coerce.number().default(10),
 });
 
 export type Config = z.infer<typeof schema>;
