@@ -23,6 +23,15 @@ describe('admin', () => {
   });
 
   describe('sellers', () => {
+    it('lists sellers with their active product counts', async () => {
+      const admin = await createAdmin();
+      const cat = await createCategory();
+      const { seller } = await createSeller();
+      await createProduct(seller.id, cat.id);
+      await createProduct(seller.id, cat.id, { status: 'draft' });
+      const res = await api().get('/api/admin/sellers').set(admin.auth);
+      expect(res.body.items[0]).toMatchObject({ id: seller.id, productCount: 1 });
+    });
   });
 
   describe('audit log', () => {
