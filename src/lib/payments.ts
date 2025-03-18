@@ -23,7 +23,11 @@ export interface Charge {
 export async function chargeCard(amountCents: number, card: CardDetails): Promise<Charge> {
   await sleep(config.PAYMENT_LATENCY_MS);
   const number = card.number.replace(/\s+/g, '');
-  if (number === DECLINED_CARD) {
+  const now = new Date();
+  const expired =
+    card.expYear < now.getUTCFullYear() ||
+    (card.expYear === now.getUTCFullYear() && card.expMonth < now.getUTCMonth() + 1);
+  if (number === DECLINED_CARD || expired) {
     throw new HttpError(402, 'payment_declined', 'Your card was declined');
   }
   return { ref: `ch_${crypto.randomBytes(12).toString('hex')}`, last4: number.slice(-4), amountCents };
