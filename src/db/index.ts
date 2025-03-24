@@ -4,6 +4,11 @@ import { config } from '../config.js';
 import { logger } from '../lib/logger.js';
 import type { Database } from './types.js';
 
+// int8 (ids, counts) and numeric come back as strings by default. Our ids and
+// counts comfortably fit in a JS number.
+pg.types.setTypeParser(pg.types.builtins.INT8, (v) => Number.parseInt(v, 10));
+pg.types.setTypeParser(pg.types.builtins.NUMERIC, (v) => Number.parseFloat(v));
+
 export const pool = new pg.Pool({
   connectionString: config.DATABASE_URL,
   max: config.DATABASE_POOL_MAX,
