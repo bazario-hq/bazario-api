@@ -87,6 +87,19 @@ describe('catalog', () => {
       expect(res.body.meta.total).toBe(2);
     });
 
+    it('filters by category including subcategories', async () => {
+      const boot = await createProduct(seller.seller.id, shoes.id);
+      const scarf = await createProduct(seller.seller.id, fashion.id);
+      await createProduct(seller.seller.id, kitchen.id);
+
+      const res = await api().get('/api/products').query({ category: 'fashion' });
+      expect(res.body.items.map((p: { id: number }) => p.id).sort()).toEqual([boot.id, scarf.id].sort());
+
+      const none = await api().get('/api/products').query({ category: 'does-not-exist' });
+      expect(none.body.items).toEqual([]);
+      expect(none.body.meta.total).toBe(0);
+    });
+
     it('filters by seller, price, rating and stock', async () => {
       const other = await createSeller();
       const cheap = await createProduct(seller.seller.id, shoes.id, { priceCents: 500, ratingAvg: 4.5, ratingCount: 3 });
