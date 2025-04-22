@@ -119,6 +119,19 @@ describe('catalog', () => {
       const inStock = await api().get('/api/products').query({ seller: seller.seller.slug, maxPrice: 3000, inStock: 'true' });
       expect(inStock.body.items.map((p: { id: number }) => p.id)).toEqual([cheap.id]);
     });
+
+    it('sorts by price, rating and popularity', async () => {
+      const a = await createProduct(seller.seller.id, shoes.id, { priceCents: 300, ratingAvg: 3, salesCount: 50 });
+      const b = await createProduct(seller.seller.id, shoes.id, { priceCents: 100, ratingAvg: 5, salesCount: 5 });
+      const c = await createProduct(seller.seller.id, shoes.id, { priceCents: 200, ratingAvg: 4, salesCount: 500 });
+      const ids = async (sort: string) =>
+        (await api().get('/api/products').query({ sort })).body.items.map((p: { id: number }) => p.id);
+
+      expect(await ids('price_asc')).toEqual([b.id, c.id, a.id]);
+      expect(await ids('price_desc')).toEqual([a.id, c.id, b.id]);
+      expect(await ids('rating')).toEqual([b.id, c.id, a.id]);
+      expect(await ids('popular')).toEqual([c.id, a.id, b.id]);
+    });
   });
 
   describe('product detail', () => {

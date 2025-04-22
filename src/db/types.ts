@@ -89,7 +89,9 @@ export interface ProductsTable {
   status: Generated<ProductStatus>;
   rating_avg: Generated<number>;
   rating_count: Generated<number>;
+  sales_count: Generated<number>;
   specs: Json<Record<string, string>>;
+  published_at: NullableTimestamp;
   created_at: Generated<Date>;
   updated_at: Generated<Date>;
 }
