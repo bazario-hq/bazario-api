@@ -8,7 +8,7 @@ const bool = z
 const schema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().default(3000),
-  LOG_LEVEL: z.string().default('info'),
+  LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
 
   DATABASE_URL: z.string().default('postgres://bazario:change-me@localhost:5432/bazario'),
   DATABASE_POOL_MAX: z.coerce.number().default(10),
