@@ -24,6 +24,7 @@ src/
   middleware/             auth, logging, metrics, error handling
   modules/<area>/         routes -> services -> repositories per feature
   jobs/                   in-process scheduled jobs
+  seed/                   deterministic dataset generator (npm run seed)
   openapi/                registry used to build openapi.json
 tests/
   unit/                   no database needed
@@ -49,6 +50,26 @@ npm install
 npm run migrate
 npm run dev
 ```
+
+## Seed data
+
+`src/seed` generates a deterministic dataset (fixed random seed) for each environment size:
+
+```sh
+npm run seed -- --size=dev --reset          # drops and recreates the schema, then seeds
+npm run seed -- --size=staging --reset --no-images
+npm run seed -- --size=prod-sim --grow=1    # adds one growth step to an existing dataset
+```
+
+| Size | Buyers | Sellers | Products | Orders |
+| --- | --- | --- | --- | --- |
+| `dev` | 2,000 | 40 | 3,000 | 12,000 |
+| `staging` | 60,000 | 400 | 40,000 | 300,000 |
+| `prod-sim` | 600,000 | 3,000 | 200,000 | 2,400,000 |
+
+Two years of history with growth, seasonality and a daily traffic curve: a few big sellers with large catalogues, frequent buyers with hundreds of orders, popular products with thousands of reviews, and notifications, wishlists, carts, stock history and payouts to match. Product photos are generated (not downloaded) and uploaded to object storage once per pool. Every seeded account uses the password `bazario-demo`; staff accounts are `admin@`, `ops@` and `trust@bazario.example`.
+
+The seed also writes a manifest (accounts, big sellers, popular products) that the k6 load generator in `bazario-infra` reads. In the Docker environments run it through `make seed ENV=<env>` in `bazario-infra`.
 
 ## Tests
 
