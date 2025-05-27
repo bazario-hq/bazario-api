@@ -24,4 +24,9 @@ describe('seed generator', () => {
     expect(counts[2] / counts[0]).toBeGreaterThan(2.7);
     expect(counts[2] / counts[0]).toBeLessThan(3.3);
   });
+
+  it('boosts the holiday season and Black Friday', () => {
+    expect(seasonalFactor(Date.UTC(2025, 10, 28))).toBeGreaterThan(4);
+    expect(seasonalFactor(Date.UTC(2025, 5, 11))).toBeLessThan(1.2);
+  });
 });
