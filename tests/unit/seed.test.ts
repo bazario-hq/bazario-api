@@ -25,6 +25,17 @@ describe('seed generator', () => {
     expect(counts[2] / counts[0]).toBeLessThan(3.3);
   });
 
+  it('samples order times inside the window, with more recent days busier', () => {
+    const end = Date.UTC(2026, 5, 30);
+    const start = end - 365 * DAY_MS;
+    const timeline = new Timeline(start, end, 10);
+    const times = timeline.sampleSorted(new Rng(5, 'timeline'), 5_000);
+    expect(times[0]).toBeGreaterThanOrEqual(start);
+    expect(times[times.length - 1]).toBeLessThanOrEqual(end);
+    const lastQuarter = times.filter((t) => t > end - 91 * DAY_MS).length;
+    expect(lastQuarter / times.length).toBeGreaterThan(0.4);
+  });
+
   it('boosts the holiday season and Black Friday', () => {
     expect(seasonalFactor(Date.UTC(2025, 10, 28))).toBeGreaterThan(4);
     expect(seasonalFactor(Date.UTC(2025, 5, 11))).toBeLessThan(1.2);
