@@ -40,4 +40,9 @@ describe('seed generator', () => {
     expect(seasonalFactor(Date.UTC(2025, 10, 28))).toBeGreaterThan(4);
     expect(seasonalFactor(Date.UTC(2025, 5, 11))).toBeLessThan(1.2);
   });
+
+  it('builds a stable photo pool', () => {
+    expect(imagePool(9, 3)).toEqual(imagePool(9, 3));
+    expect(imagePool(9, 3)[0].storageKey).toMatch(/^products\/seed\/0000-[0-9a-f]{8}\/original\.jpg$/);
+  });
 });
