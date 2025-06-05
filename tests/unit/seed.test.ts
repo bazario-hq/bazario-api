@@ -25,6 +25,16 @@ describe('seed generator', () => {
     expect(counts[2] / counts[0]).toBeLessThan(3.3);
   });
 
+  it('writes descriptions between a few hundred bytes and about 6 KB', () => {
+    const rng = new Rng(3, 'descriptions');
+    const lengths = Array.from({ length: 400 }, () =>
+      productDescription(rng, { name: 'Teak Bowl', store: 'Lanka Makers', material: 'teak', colour: 'ochre' }).length,
+    );
+    expect(Math.min(...lengths)).toBeGreaterThan(250);
+    expect(Math.max(...lengths)).toBeLessThan(6_800);
+    expect(lengths.filter((l) => l >= 2_000).length).toBeGreaterThan(50);
+  });
+
   it('samples order times inside the window, with more recent days busier', () => {
     const end = Date.UTC(2026, 5, 30);
     const start = end - 365 * DAY_MS;
