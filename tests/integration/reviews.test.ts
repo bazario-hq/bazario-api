@@ -21,6 +21,12 @@ describe('reviews', () => {
     db.selectFrom('products').select(['rating_avg', 'rating_count']).where('id', '=', product.id).executeTakeFirstOrThrow();
 
   describe('listing', () => {
+    it('masks off-platform contact details in older reviews', async () => {
+      const u = await createUser();
+      await createReview(product.id, u.id, 4, { body: 'Nice lamp. Even cheaper on WhatsApp!' });
+      const res = await api().get(`/api/products/${product.id}/reviews`);
+      expect(res.body.items[0].body).toBe('Nice lamp. Even cheaper on ********!');
+    });
   });
 
   describe('writing', () => {
@@ -56,6 +62,18 @@ describe('reviews', () => {
       const body = { rating: 5, title: 'Great', body: 'Great lamp' };
       expect((await api().post(`/api/products/${product.id}/reviews`).set(buyer.auth).send(body)).status).toBe(201);
       expect((await api().post(`/api/products/${product.id}/reviews`).set(buyer.auth).send(body)).status).toBe(409);
+    });
+
+    it('holds reviews with blocked terms for moderation', async () => {
+      const buyer = await createUser();
+      await createOrder(buyer.id, [{ product, quantity: 1 }]);
+      const res = await api()
+        .post(`/api/products/${product.id}/reviews`)
+        .set(buyer.auth)
+        .send({ rating: 5, title: 'Great', body: 'Contact me on t e l e g r a m for a discount' });
+      expect(res.status).toBe(201);
+      expect(res.body.status).toBe('pending');
+      expect(await rating()).toEqual({ rating_avg: 0, rating_count: 0 });
     });
   });
 });

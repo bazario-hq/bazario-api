@@ -42,6 +42,21 @@ const AdminSeller = registry.register(
   }),
 );
 
+const ModerationReview = registry.register(
+  'ModerationReview',
+  z.object({
+    id: z.number().int(),
+    rating: z.number().int(),
+    title: z.string(),
+    body: z.string(),
+    status: z.enum(['published', 'pending', 'rejected']),
+    moderationNote: z.string().nullable(),
+    author: z.object({ id: z.number().int(), name: z.string() }),
+    product: z.object({ id: z.number().int(), name: z.string() }),
+    createdAt: z.string(),
+  }),
+);
+
 const AuditEntry = registry.register(
   'AuditEntry',
   z.object({
@@ -127,6 +142,42 @@ route(
     },
   },
   ({ req, params, body }) => adminService.updateSellerStatus(req, params.id, body.status),
+);
+
+route(
+  adminRouter,
+  mount,
+  {
+    method: 'get',
+    path: '/reviews',
+    summary: 'Review moderation queue (oldest first)',
+    tags,
+    roles,
+    query: z.object({ status: z.enum(['published', 'pending', 'rejected']).default('pending'), ...pageParams }),
+    responses: {
+      200: { description: 'Reviews', schema: z.object({ items: z.array(ModerationReview), meta: PageMeta }) },
+    },
+  },
+  ({ query }) => adminService.listReviews(query),
+);
+
+route(
+  adminRouter,
+  mount,
+  {
+    method: 'patch',
+    path: '/reviews/{id}',
+    summary: 'Publish or reject a review',
+    tags,
+    roles,
+    params: IdParams,
+    body: z.object({ status: z.enum(['published', 'rejected']), note: z.string().max(500).optional() }),
+    responses: {
+      200: { description: 'Updated', schema: z.object({ id: z.number().int(), status: z.string() }) },
+      404: { description: 'Not found' },
+    },
+  },
+  ({ req, params, body }) => adminService.moderateReview(req, params.id, body),
 );
 
 route(

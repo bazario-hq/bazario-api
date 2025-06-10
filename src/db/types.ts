@@ -8,6 +8,7 @@ export type UserRole = 'buyer' | 'seller' | 'admin';
 export type UserStatus = 'active' | 'suspended';
 export type SellerStatus = 'pending' | 'active' | 'suspended';
 export type ProductStatus = 'draft' | 'active' | 'archived';
+export type ReviewStatus = 'published' | 'pending' | 'rejected';
 export type OrderStatus = 'paid' | 'partially_shipped' | 'shipped' | 'delivered' | 'cancelled';
 export type OrderItemStatus = 'pending' | 'shipped' | 'delivered' | 'cancelled';
 export type PayoutStatus = 'scheduled' | 'paid';
@@ -115,6 +116,10 @@ export interface ReviewsTable {
   rating: number;
   title: string;
   body: string;
+  status: Generated<ReviewStatus>;
+  moderated_by: number | null;
+  moderated_at: NullableTimestamp;
+  moderation_note: string | null;
   created_at: Generated<Date>;
   updated_at: Generated<Date>;
 }

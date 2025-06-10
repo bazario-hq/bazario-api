@@ -143,6 +143,75 @@ export const adminService = {
     return { id, status };
   },
 
+  async listReviews(opts: { status: ReviewStatus; page: number; pageSize: number }) {
+    const q = db
+      .selectFrom('reviews')
+      .innerJoin('users', 'users.id', 'reviews.user_id')
+      .innerJoin('products', 'products.id', 'reviews.product_id')
+      .where('reviews.status', '=', opts.status);
+
+    const rows = await q
+      .select([
+        'reviews.id',
+        'reviews.rating',
+        'reviews.title',
+        'reviews.body',
+        'reviews.status',
+        'reviews.created_at',
+        'reviews.moderation_note',
+        'users.id as author_id',
+        'users.name as author_name',
+        'products.id as product_id',
+        'products.name as product_name',
+      ])
+      .orderBy('reviews.created_at', 'asc')
+      .limit(opts.pageSize)
+      .offset((opts.page - 1) * opts.pageSize)
+      .execute();
+    const { count } = await q.select((eb) => eb.fn.countAll<number>().as('count')).executeTakeFirstOrThrow();
+
+    return {
+      items: rows.map((r) => ({
+        id: r.id,
+        rating: r.rating,
+        title: r.title,
+        body: r.body,
+        status: r.status,
+        moderationNote: r.moderation_note,
+        author: { id: r.author_id, name: r.author_name },
+        product: { id: r.product_id, name: r.product_name },
+        createdAt: r.created_at.toISOString(),
+      })),
+      meta: pageMeta(opts.page, opts.pageSize, Number(count)),
+    };
+  },
+
+  async moderateReview(req: Request, id: number, input: { status: 'published' | 'rejected'; note?: string }) {
+    const review = await reviewsRepository.findById(id);
+    if (!review) throw notFound('Review');
+
+    await db
+      .updateTable('reviews')
+      .set({
+        status: input.status,
+        moderated_by: req.user!.id,
+        moderated_at: new Date(),
+        moderation_note: input.note ?? null,
+      })
+      .where('id', '=', id)
+      .execute();
+    await reviewsRepository.refreshProductRating(review.product_id);
+
+    await notificationsService.notify(review.user_id, {
+      type: `review.${input.status}`,
+      title: input.status === 'published' ? 'Your review is live' : 'Your review was not published',
+      body: input.note ?? `"${review.title}"`,
+      link: `/products/${review.product_id}`,
+    });
+    await recordAudit(req, { action: `admin.review.${input.status}`, entityType: 'review', entityId: id });
+    return { id, status: input.status };
+  },
+
   async auditLog(opts: { actorId?: number; entityType?: string; page: number; pageSize: number }) {
     let q = db.selectFrom('audit_log').leftJoin('users', 'users.id', 'audit_log.actor_id');
     if (opts.actorId) q = q.where('audit_log.actor_id', '=', opts.actorId);

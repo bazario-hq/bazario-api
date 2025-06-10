@@ -34,6 +34,32 @@ describe('admin', () => {
     });
   });
 
+  describe('review moderation', () => {
+    it('publishes and rejects held reviews and keeps ratings in sync', async () => {
+      const admin = await createAdmin();
+      const cat = await createCategory();
+      const { seller } = await createSeller();
+      const product = await createProduct(seller.id, cat.id);
+      const a = await createUser();
+      const b = await createUser();
+      const held = await createReview(product.id, a.id, 5, { status: 'pending' });
+      const spam = await createReview(product.id, b.id, 1, { status: 'pending' });
+
+      const queue = await api().get('/api/admin/reviews').set(admin.auth);
+      expect(queue.body.items.map((r: { id: number }) => r.id)).toEqual([held.id, spam.id]);
+
+      await api().patch(`/api/admin/reviews/${held.id}`).set(admin.auth).send({ status: 'published' });
+      await api().patch(`/api/admin/reviews/${spam.id}`).set(admin.auth).send({ status: 'rejected', note: 'Spam' });
+
+      const p = await db.selectFrom('products').select(['rating_avg', 'rating_count']).where('id', '=', product.id).executeTakeFirstOrThrow();
+      expect(p).toEqual({ rating_avg: 5, rating_count: 1 });
+      const left = await api().get('/api/admin/reviews').set(admin.auth);
+      expect(left.body.items).toEqual([]);
+      const note = await db.selectFrom('notifications').select(['type', 'body']).where('user_id', '=', b.id).executeTakeFirstOrThrow();
+      expect(note).toEqual({ type: 'review.rejected', body: 'Spam' });
+    });
+  });
+
   describe('audit log', () => {
     it('lists entries newest first and filters by entity type', async () => {
       const admin = await createAdmin();
