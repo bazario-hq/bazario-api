@@ -8,6 +8,10 @@ describe('moderation', () => {
     expect(needsModeration('Lovely colours, fast delivery')).toBe(false);
   });
 
+  it('does not flag terms inside longer words', () => {
+    expect(needsModeration('A fakery-free review of this scampi bowl')).toBe(false);
+  });
+
   it('masks blocked terms but keeps the rest of the text', () => {
     expect(maskBlockedTerms('Great! Visit www.example.test for more')).toBe('Great! Visit ***.example.test for more');
     expect(maskBlockedTerms('Nothing to hide here')).toBe('Nothing to hide here');
