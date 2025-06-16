@@ -25,6 +25,13 @@ describe('seed generator', () => {
     expect(counts[2] / counts[0]).toBeLessThan(3.3);
   });
 
+  it('keeps ordinary review text clear of the moderation filter', () => {
+    for (const sentence of ALL_REVIEW_SENTENCES) expect(needsModeration(sentence), sentence).toBe(false);
+    for (const sentence of ALL_HELD_SENTENCES) expect(needsModeration(sentence), sentence).toBe(true);
+    const rng = new Rng(7, 'reviews');
+    expect(needsModeration(reviewText(rng, 5, true).body)).toBe(true);
+  });
+
   it('writes descriptions between a few hundred bytes and about 6 KB', () => {
     const rng = new Rng(3, 'descriptions');
     const lengths = Array.from({ length: 400 }, () =>
