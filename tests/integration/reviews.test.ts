@@ -75,5 +75,31 @@ describe('reviews', () => {
       expect(res.body.status).toBe('pending');
       expect(await rating()).toEqual({ rating_avg: 0, rating_count: 0 });
     });
+
+    it('validates the rating', async () => {
+      const buyer = await createUser();
+      const res = await api()
+        .post(`/api/products/${product.id}/reviews`)
+        .set(buyer.auth)
+        .send({ rating: 6, title: 'x', body: 'y' });
+      expect(res.status).toBe(400);
+    });
+
+    it('lets authors edit and delete their own review only', async () => {
+      const author = await createUser();
+      const other = await createUser();
+      const review = await createReview(product.id, author.id, 2);
+
+      expect((await api().patch(`/api/reviews/${review.id}`).set(other.auth).send({ rating: 5 })).status).toBe(403);
+
+      const edited = await api().patch(`/api/reviews/${review.id}`).set(author.auth).send({ rating: 5 });
+      expect(edited.status).toBe(200);
+      expect(edited.body.rating).toBe(5);
+      expect(await rating()).toEqual({ rating_avg: 5, rating_count: 1 });
+
+      expect((await api().delete(`/api/reviews/${review.id}`).set(other.auth)).status).toBe(403);
+      expect((await api().delete(`/api/reviews/${review.id}`).set(author.auth)).status).toBe(204);
+      expect(await rating()).toEqual({ rating_avg: 0, rating_count: 0 });
+    });
   });
 });
