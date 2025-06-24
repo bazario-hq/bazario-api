@@ -160,6 +160,17 @@ describe('catalog', () => {
       expect(res.body.related.map((p: { id: number }) => p.id)).toEqual([related.id]);
       expect(res.body.inWishlist).toBe(false);
     });
+
+    it('knows whether the signed-in user has wishlisted it', async () => {
+      const cat = await createCategory();
+      const { seller } = await createSeller();
+      const product = await createProduct(seller.id, cat.id);
+      const user = await createUser();
+      await db.insertInto('wishlist_items').values({ user_id: user.id, product_id: product.id }).execute();
+
+      const res = await api().get(`/api/products/${product.id}`).set(user.auth);
+      expect(res.body.inWishlist).toBe(true);
+    });
   });
 
   describe('home page', () => {
