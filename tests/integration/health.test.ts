@@ -24,4 +24,10 @@ describe('infra endpoints', () => {
     expect(res.body.openapi).toBe('3.0.3');
     expect(Object.keys(res.body.paths)).toContain('/products/{id}');
   });
+
+  it('returns a JSON 404 for unknown routes', async () => {
+    const res = await api().get('/api/nope');
+    expect(res.status).toBe(404);
+    expect(res.body.error.code).toBe('not_found');
+  });
 });
