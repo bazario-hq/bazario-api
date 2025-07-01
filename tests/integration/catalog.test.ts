@@ -132,6 +132,19 @@ describe('catalog', () => {
       expect(await ids('rating')).toEqual([b.id, c.id, a.id]);
       expect(await ids('popular')).toEqual([c.id, a.id, b.id]);
     });
+
+    it('returns category facets for the current filters', async () => {
+      await createProduct(seller.seller.id, shoes.id, { name: 'Red shoe' });
+      await createProduct(seller.seller.id, shoes.id, { name: 'Red boot' });
+      await createProduct(seller.seller.id, kitchen.id, { name: 'Red kettle' });
+      await createProduct(seller.seller.id, kitchen.id, { name: 'Blue kettle' });
+
+      const res = await api().get('/api/products').query({ q: 'red' });
+      expect(res.body.facets.categories).toEqual([
+        { id: shoes.id, name: 'Shoes', slug: 'shoes', count: 2 },
+        { id: kitchen.id, name: 'Kitchen', slug: 'kitchen', count: 1 },
+      ]);
+    });
   });
 
   describe('product detail', () => {
