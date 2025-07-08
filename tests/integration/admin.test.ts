@@ -60,6 +60,27 @@ describe('admin', () => {
     });
   });
 
+  describe('reports', () => {
+    it('reports platform totals, months and top sellers', async () => {
+      const admin = await createAdmin();
+      const cat = await createCategory();
+      const big = await createSeller({ storeName: 'Big' });
+      const small = await createSeller({ storeName: 'Small' });
+      const p1 = await createProduct(big.seller.id, cat.id, { priceCents: 5000 });
+      const p2 = await createProduct(small.seller.id, cat.id, { priceCents: 1000 });
+      const buyer = await createUser();
+      await createOrder(buyer.id, [{ product: p1, quantity: 2 }]);
+      await createOrder(buyer.id, [{ product: p2, quantity: 1 }]);
+
+      const res = await api().get('/api/admin/reports/overview').set(admin.auth);
+      expect(res.status).toBe(200);
+      expect(res.body.totals).toEqual({ gmvCents: 11000, orders: 2, users: 4, activeProducts: 2, activeSellers: 2 });
+      const thisMonth = new Date().toISOString().slice(0, 7);
+      expect(res.body.months).toEqual([{ month: thisMonth, orders: 2, gmvCents: 11000, buyers: 1, signups: 4 }]);
+      expect(res.body.topSellers.map((s: { storeName: string }) => s.storeName)).toEqual(['Big', 'Small']);
+    });
+  });
+
   describe('audit log', () => {
     it('lists entries newest first and filters by entity type', async () => {
       const admin = await createAdmin();

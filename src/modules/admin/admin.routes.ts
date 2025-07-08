@@ -57,6 +57,31 @@ const ModerationReview = registry.register(
   }),
 );
 
+const ReportOverview = registry.register(
+  'ReportOverview',
+  z.object({
+    totals: z.object({
+      gmvCents: z.number().int(),
+      orders: z.number().int(),
+      users: z.number().int(),
+      activeProducts: z.number().int(),
+      activeSellers: z.number().int(),
+    }),
+    months: z.array(
+      z.object({
+        month: z.string(),
+        orders: z.number().int(),
+        gmvCents: z.number().int(),
+        buyers: z.number().int(),
+        signups: z.number().int(),
+      }),
+    ),
+    topSellers: z.array(
+      z.object({ sellerId: z.number().int(), storeName: z.string(), gmvCents: z.number().int(), orders: z.number().int() }),
+    ),
+  }),
+);
+
 const AuditEntry = registry.register(
   'AuditEntry',
   z.object({
@@ -178,6 +203,21 @@ route(
     },
   },
   ({ req, params, body }) => adminService.moderateReview(req, params.id, body),
+);
+
+route(
+  adminRouter,
+  mount,
+  {
+    method: 'get',
+    path: '/reports/overview',
+    summary: 'Platform totals and monthly trends',
+    tags,
+    roles,
+    query: z.object({ months: z.coerce.number().int().min(1).max(36).default(12) }),
+    responses: { 200: { description: 'Report', schema: ReportOverview } },
+  },
+  ({ query }) => adminService.reportOverview(query.months),
 );
 
 route(

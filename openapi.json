@@ -345,6 +345,99 @@
           "createdAt"
         ]
       },
+      "ReportOverview": {
+        "type": "object",
+        "properties": {
+          "totals": {
+            "type": "object",
+            "properties": {
+              "gmvCents": {
+                "type": "integer"
+              },
+              "orders": {
+                "type": "integer"
+              },
+              "users": {
+                "type": "integer"
+              },
+              "activeProducts": {
+                "type": "integer"
+              },
+              "activeSellers": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "gmvCents",
+              "orders",
+              "users",
+              "activeProducts",
+              "activeSellers"
+            ]
+          },
+          "months": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "month": {
+                  "type": "string"
+                },
+                "orders": {
+                  "type": "integer"
+                },
+                "gmvCents": {
+                  "type": "integer"
+                },
+                "buyers": {
+                  "type": "integer"
+                },
+                "signups": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "month",
+                "orders",
+                "gmvCents",
+                "buyers",
+                "signups"
+              ]
+            }
+          },
+          "topSellers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "sellerId": {
+                  "type": "integer"
+                },
+                "storeName": {
+                  "type": "string"
+                },
+                "gmvCents": {
+                  "type": "integer"
+                },
+                "orders": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "sellerId",
+                "storeName",
+                "gmvCents",
+                "orders"
+              ]
+            }
+          }
+        },
+        "required": [
+          "totals",
+          "months",
+          "topSellers"
+        ]
+      },
       "AuditEntry": {
         "type": "object",
         "properties": {
@@ -2551,6 +2644,64 @@
           },
           "404": {
             "description": "Not found"
+          }
+        }
+      }
+    },
+    "/admin/reports/overview": {
+      "get": {
+        "summary": "Platform totals and monthly trends",
+        "tags": [
+          "Admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 36,
+              "default": 12
+            },
+            "required": false,
+            "name": "months",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Report",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportOverview"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       }
