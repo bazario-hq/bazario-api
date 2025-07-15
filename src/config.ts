@@ -23,7 +23,7 @@ const schema = z.object({
   JWT_ACCESS_SECRET: z.string().default('dev-access-secret'),
   JWT_REFRESH_SECRET: z.string().default('dev-refresh-secret'),
   // Access tokens are short lived (1 hour); the web app refreshes them silently.
-  JWT_ACCESS_TTL: z.string().default('1h'),
+  JWT_ACCESS_TTL: z.string().default('15m'),
   REFRESH_TOKEN_TTL_DAYS: z.coerce.number().default(30),
   BCRYPT_ROUNDS: z.coerce.number().default(12),
 
