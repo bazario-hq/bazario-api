@@ -27,6 +27,23 @@ describe('sellers', () => {
     expect(res.body.slug).toMatch(/^spice-box-[a-z0-9]+$/);
   });
 
+  it('shows a storefront with stats', async () => {
+    const cat = await createCategory();
+    const { seller } = await createSeller({ storeName: 'Batik Studio' });
+    const p1 = await createProduct(seller.id, cat.id, { salesCount: 7 });
+    await createProduct(seller.id, cat.id, { salesCount: 3 });
+    await createProduct(seller.id, cat.id, { status: 'draft', salesCount: 100 });
+    const u1 = await createUser();
+    const u2 = await createUser();
+    await createReview(p1.id, u1.id, 5);
+    await createReview(p1.id, u2.id, 4);
+
+    const res = await api().get(`/api/sellers/${seller.slug}`);
+    expect(res.status).toBe(200);
+    expectSchema(Storefront, res.body);
+    expect(res.body.stats).toEqual({ productCount: 2, unitsSold: 10, ratingAvg: 4.5, reviewCount: 2 });
+  });
+
   it('hides pending and suspended stores', async () => {
     const pending = await createSeller({ status: 'pending' });
     const suspended = await createSeller({ status: 'suspended' });

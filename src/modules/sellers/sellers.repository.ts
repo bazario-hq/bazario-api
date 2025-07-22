@@ -29,4 +29,29 @@ export const sellersRepository = {
       .returningAll()
       .executeTakeFirstOrThrow();
   },
+
+  async storefrontStats(sellerId: number) {
+    const row = await db
+      .selectFrom('products')
+      .select((eb) => [
+        eb.fn.countAll<number>().as('product_count'),
+        eb.fn.sum<number>('sales_count').as('units_sold'),
+      ])
+      .where('seller_id', '=', sellerId)
+      .where('status', '=', 'active')
+      .executeTakeFirstOrThrow();
+    const rating = await db
+      .selectFrom('reviews')
+      .innerJoin('products', 'products.id', 'reviews.product_id')
+      .select((eb) => [eb.fn.avg<number>('reviews.rating').as('avg'), eb.fn.countAll<number>().as('count')])
+      .where('products.seller_id', '=', sellerId)
+      .where('reviews.status', '=', 'published')
+      .executeTakeFirstOrThrow();
+    return {
+      productCount: Number(row.product_count),
+      unitsSold: Number(row.units_sold ?? 0),
+      ratingAvg: rating.avg == null ? null : Math.round(Number(rating.avg) * 100) / 100,
+      reviewCount: Number(rating.count),
+    };
+  },
 };
