@@ -189,6 +189,14 @@ describe('seller area', () => {
       const filtered = await api().get('/api/seller/orders').query({ status: 'pending' }).set(seller.user.auth);
       expect(filtered.body.items).toEqual([]);
     });
+
+    it('404s for orders without the seller items', async () => {
+      const other = await createSeller();
+      const theirs = await createProduct(other.seller.id, categoryId);
+      const buyer = await createUser();
+      const order = await createOrder(buyer.id, [{ product: theirs, quantity: 1 }]);
+      expect((await api().get(`/api/seller/orders/${order.id}`).set(seller.user.auth)).status).toBe(404);
+    });
   });
 
   describe('dashboard', () => {
