@@ -241,5 +241,24 @@ describe('seller area', () => {
       expect(res.body.months[1].status).toBe('scheduled');
       expect(res.body.totals).toEqual({ grossCents: 20000, feeCents: 2000, netCents: 18000 });
     });
+
+    it('exports sales as CSV with a total row', async () => {
+      const rug = await createProduct(seller.seller.id, categoryId, { name: 'Rug, "large"', priceCents: 1250 });
+      const buyer = await createUser({ name: 'Dilan' });
+      await createOrder(buyer.id, [{ product: rug, quantity: 2 }], { createdAt: new Date('2026-03-10T10:00:00Z') });
+      await createOrder(buyer.id, [{ product: rug, quantity: 1, status: 'cancelled' }], { createdAt: new Date('2026-03-11T10:00:00Z') });
+      await createOrder(buyer.id, [{ product: rug, quantity: 5 }], { createdAt: new Date('2026-04-01T10:00:00Z') });
+
+      const res = await api().get('/api/seller/sales/export.csv').query({ from: '2026-03-01', to: '2026-03-31' }).set(seller.user.auth);
+      expect(res.status).toBe(200);
+      expect(res.headers['content-type']).toContain('text/csv');
+      expect(res.headers['content-disposition']).toMatch(/attachment; filename="sales-/);
+      const lines = res.text.trim().split('\n');
+      expect(lines[0]).toBe('order_id,order_date,product_id,product_name,quantity,unit_price,line_total,status,buyer_name,ship_city,ship_country');
+      expect(lines).toHaveLength(4);
+      expect(lines[1]).toContain('"Rug, ""large"""');
+      expect(lines[1]).toContain(',2,12.50,25.00,pending,Dilan,Colombo,LK');
+      expect(lines[3]).toBe('TOTAL,,,,,,25.00,,,,');
+    });
   });
 });

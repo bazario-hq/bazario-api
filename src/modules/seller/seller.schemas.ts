@@ -167,3 +167,8 @@ export const PayoutsSchema = registry.register(
     totals: z.object({ grossCents: z.number().int(), feeCents: z.number().int(), netCents: z.number().int() }),
   }),
 );
+
+export const ExportQuery = z.object({
+  from: z.string().date().optional(),
+  to: z.string().date().optional(),
+});

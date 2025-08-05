@@ -15,6 +15,7 @@ import {
   CreateProductBody,
   DashboardQuery,
   DashboardSchema,
+  ExportQuery,
   InventoryAdjustment,
   InventoryRow,
   PayoutsSchema,
@@ -25,6 +26,7 @@ import {
   UpdateProductBody,
 } from './seller.schemas.js';
 import { sellerDashboardService } from './seller-dashboard.service.js';
+import { sellerExportService } from './seller-export.service.js';
 import { sellerInventoryService } from './seller-inventory.service.js';
 import { sellerOrdersService } from './seller-orders.service.js';
 import { sellerPayoutsService } from './seller-payouts.service.js';
@@ -386,4 +388,24 @@ route(
     responses: { 200: { description: 'Payouts', schema: PayoutsSchema } },
   },
   ({ res }) => sellerPayoutsService.summary(currentSeller(res).id),
+);
+
+route(
+  sellerRouter,
+  mount,
+  {
+    method: 'get',
+    path: '/sales/export.csv',
+    summary: 'Download sales as CSV',
+    tags,
+    auth,
+    query: ExportQuery,
+    responses: { 200: { description: 'CSV file', schema: z.string(), contentType: 'text/csv' } },
+  },
+  async ({ res, query }) => {
+    const csv = await sellerExportService.salesCsv(currentSeller(res).id, query);
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="sales-${new Date().toISOString().slice(0, 10)}.csv"`);
+    res.send(csv);
+  },
 );
