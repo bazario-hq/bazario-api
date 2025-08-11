@@ -44,6 +44,7 @@ route(
     let slug = slugify(body.storeName) || 'store';
     if (await sellersRepository.slugExists(slug)) slug = `${slug}-${uniqueSuffix()}`;
 
+    // TODO: let sellers upload a logo during onboarding (BZR-275)
     const seller = await sellersRepository.create({
       user_id: user.id,
       store_name: body.storeName,
