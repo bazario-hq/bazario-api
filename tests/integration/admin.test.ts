@@ -16,6 +16,19 @@ describe('admin', () => {
   useTestDb();
 
   describe('users', () => {
+    it('pages through users newest first', async () => {
+      const admin = await createAdmin();
+      for (let i = 0; i < 30; i++) {
+        await createUser({ email: `shopper-${Math.floor(Math.random() * 10000)}@example.test` });
+      }
+
+      const page1 = await api().get('/api/admin/users').query({ pageSize: 10 }).set(admin.auth);
+      const page4 = await api().get('/api/admin/users').query({ pageSize: 10, page: 4 }).set(admin.auth);
+      expect(page1.body.meta).toEqual({ page: 1, pageSize: 10, total: 31, totalPages: 4 });
+      expect(page4.body.items).toHaveLength(1);
+      expect(page4.body.items[0].id).toBe(admin.id);
+    });
+
     it('does not let admins change their own account', async () => {
       const admin = await createAdmin();
       expect((await api().patch(`/api/admin/users/${admin.id}`).set(admin.auth).send({ role: 'buyer' })).status).toBe(400);
