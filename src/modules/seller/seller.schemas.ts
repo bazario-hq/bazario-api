@@ -122,7 +122,7 @@ export const SellerOrderDetail = registry.register(
   }),
 );
 
-export const DashboardQuery = z.object({ range: z.enum(['7d', '30d', '90d']).default('30d') });
+export const DashboardQuery = z.object({ range: z.enum(['7d', '30d', '90d', 'mtd']).default('30d') });
 
 const Kpis = z.object({
   revenueCents: z.number().int(),

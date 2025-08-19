@@ -223,6 +223,12 @@ describe('seller area', () => {
       expect(res.body.lowStock).toEqual({ count: 1, items: [{ productId: mat.id, name: 'Mat', stock: 1 }] });
       expect(res.body.pendingShipments).toBe(3);
     });
+
+    it('supports month to date', async () => {
+      const res = await api().get('/api/seller/dashboard').query({ range: 'mtd' }).set(seller.user.auth);
+      expect(res.status).toBe(200);
+      expect(res.body.range.from.endsWith('-01')).toBe(true);
+    });
   });
 
   describe('payouts and exports', () => {

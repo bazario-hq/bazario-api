@@ -1,14 +1,16 @@
 import { sql } from 'kysely';
 import { db } from '../../db/index.js';
 
-type Range = '7d' | '30d' | '90d';
+type Range = '7d' | '30d' | '90d' | 'mtd';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const isoDate = (d: Date) => d.toISOString().slice(0, 10);
 
 export function rangeFor(range: Range, now = new Date()) {
   const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
-  const from = new Date(today.getTime() - (Number.parseInt(range, 10) - 1) * DAY_MS);
+  let from: Date;
+  if (range === 'mtd') from = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 1));
+  else from = new Date(today.getTime() - (Number.parseInt(range, 10) - 1) * DAY_MS);
 
   const days = Math.round((today.getTime() - from.getTime()) / DAY_MS) + 1;
   const prevTo = new Date(from.getTime() - DAY_MS);
