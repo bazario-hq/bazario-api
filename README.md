@@ -95,3 +95,7 @@ The contract test fails if the committed spec is stale. The web app generates it
 ## Migrations
 
 Forward-only Kysely migrations live in `src/db/migrations`, named `YYYY_MM_DD_NNN_description.ts`. They run in order on deploy (`make deploy` in bazario-infra runs `node dist/migrate.js` before restarting the API). Never edit a migration that has shipped; add a new one.
+
+## Test accounts and payments
+
+Checkout uses a mock card processor. Any future expiry date works; card `4000 0000 0000 0002` is always declined.
