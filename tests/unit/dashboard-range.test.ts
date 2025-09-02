@@ -11,4 +11,8 @@ describe('dashboard ranges', () => {
   it('handles month to date', () => {
     expect(rangeFor('mtd', now)).toEqual({ from: '2026-03-01', to: '2026-03-15', prevFrom: '2026-02-14', prevTo: '2026-02-28', days: 15 });
   });
+
+  it('crosses month boundaries', () => {
+    expect(rangeFor('30d', now).from).toBe('2026-02-14');
+  });
 });
