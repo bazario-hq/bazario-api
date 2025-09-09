@@ -29,6 +29,22 @@ describe('admin', () => {
       expect(page4.body.items[0].id).toBe(admin.id);
     });
 
+    it('suspends a user, revoking sessions and blocking login', async () => {
+      const admin = await createAdmin();
+      const user = await createUser();
+      const login = await api().post('/api/auth/login').send({ email: user.email, password: PASSWORD });
+
+      const res = await api().patch(`/api/admin/users/${user.id}`).set(admin.auth).send({ status: 'suspended' });
+      expect(res.status).toBe(200);
+      expect(res.body.status).toBe('suspended');
+
+      expect((await api().post('/api/auth/refresh').send({ refreshToken: login.body.refreshToken })).status).toBe(401);
+      expect((await api().post('/api/auth/login').send({ email: user.email, password: PASSWORD })).status).toBe(403);
+
+      const audit = await db.selectFrom('audit_log').select(['action', 'actor_id']).execute();
+      expect(audit).toEqual([{ action: 'admin.user.update', actor_id: admin.id }]);
+    });
+
     it('does not let admins change their own account', async () => {
       const admin = await createAdmin();
       expect((await api().patch(`/api/admin/users/${admin.id}`).set(admin.auth).send({ role: 'buyer' })).status).toBe(400);

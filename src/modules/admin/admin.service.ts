@@ -53,6 +53,9 @@ export const adminService = {
       .executeTakeFirst();
     if (!user) throw notFound('User');
 
+    if (input.status === 'suspended') {
+      await db.updateTable('refresh_tokens').set({ revoked_at: new Date() }).where('user_id', '=', id).where('revoked_at', 'is', null).execute();
+    }
     await recordAudit(req, { action: 'admin.user.update', entityType: 'user', entityId: id, metadata: input });
     return {
       id: user.id,
