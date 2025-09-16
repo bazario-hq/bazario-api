@@ -52,6 +52,26 @@ describe('admin', () => {
   });
 
   describe('sellers', () => {
+    it('approves a pending seller, upgrading the owner and notifying them', async () => {
+      const admin = await createAdmin();
+      const { user, seller } = await createSeller({ status: 'pending' });
+
+      const pending = await api().get('/api/admin/sellers').query({ status: 'pending' }).set(admin.auth);
+      expect(pending.body.items.map((s: { id: number }) => s.id)).toEqual([seller.id]);
+
+      const res = await api().patch(`/api/admin/sellers/${seller.id}`).set(admin.auth).send({ status: 'active' });
+      expect(res.body).toEqual({ id: seller.id, status: 'active' });
+
+      const owner = await db.selectFrom('users').select('role').where('id', '=', user.id).executeTakeFirstOrThrow();
+      expect(owner.role).toBe('seller');
+      const notes = await db.selectFrom('notifications').select('type').where('user_id', '=', user.id).execute();
+      expect(notes.map((n) => n.type)).toEqual(['seller.active']);
+
+      const login = await api().post('/api/auth/login').send({ email: user.email, password: PASSWORD });
+      const dashboard = await api().get('/api/seller/dashboard').set('Authorization', `Bearer ${login.body.accessToken}`);
+      expect(dashboard.status).toBe(200);
+    });
+
     it('lists sellers with their active product counts', async () => {
       const admin = await createAdmin();
       const cat = await createCategory();
