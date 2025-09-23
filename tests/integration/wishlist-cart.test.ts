@@ -80,6 +80,18 @@ describe('wishlist and cart', () => {
       expect(res.body.subtotalCents).toBe(0);
     });
 
+    it('removes items and clears the cart', async () => {
+      const other = await createProduct(sellerId, categoryId);
+      await api().put(`/api/cart/items/${product.id}`).set(buyer.auth).send({ quantity: 1 });
+      await api().put(`/api/cart/items/${other.id}`).set(buyer.auth).send({ quantity: 1 });
+
+      const removed = await api().delete(`/api/cart/items/${product.id}`).set(buyer.auth);
+      expect(removed.body.items.map((i: { productId: number }) => i.productId)).toEqual([other.id]);
+
+      expect((await api().delete('/api/cart').set(buyer.auth)).status).toBe(204);
+      expect((await api().get('/api/cart').set(buyer.auth)).body.items).toEqual([]);
+    });
+
     it('keeps carts separate per user', async () => {
       const other = await createUser();
       await api().put(`/api/cart/items/${product.id}`).set(buyer.auth).send({ quantity: 1 });
