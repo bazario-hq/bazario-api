@@ -35,6 +35,7 @@ const schema = z.object({
 
   PAYMENT_LATENCY_MS: z.coerce.number().default(250),
   PLATFORM_FEE_PERCENT: z.coerce.number().default(10),
+  JOBS_ENABLED: z.string().optional(),
 });
 
 export type Config = z.infer<typeof schema>;
