@@ -104,6 +104,11 @@ describe('auth', () => {
   });
 
   describe('profile', () => {
+    it('requires a valid access token', async () => {
+      expect((await api().get('/api/auth/me')).status).toBe(401);
+      expect((await api().get('/api/auth/me').set('Authorization', 'Bearer garbage')).status).toBe(401);
+    });
+
     it('updates the display name', async () => {
       const user = await createUser();
       const res = await api().patch('/api/auth/me').set(user.auth).send({ name: '  Renamed  ' });
