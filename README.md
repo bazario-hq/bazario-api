@@ -4,7 +4,7 @@ The Node/Express API behind the Bazario marketplace: buyers browse, review and o
 
 ## Stack
 
-- Node 20, Express 4, TypeScript (ESM)
+- Node 22, Express 4, TypeScript (ESM)
 - PostgreSQL 17 via `pg` + [Kysely](https://kysely.dev) (query builder, SQL stays visible)
 - Zod for validation; the OpenAPI spec is generated from the same schemas
 - JWT access tokens + rotating refresh tokens, bcrypt password hashes
