@@ -18,6 +18,7 @@ RUN npm ci
 FROM deps AS dev
 ENV NODE_ENV=development
 COPY . .
+RUN npm run build
 EXPOSE 3000
 CMD ["npm", "run", "dev"]
 
