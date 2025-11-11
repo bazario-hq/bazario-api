@@ -47,6 +47,11 @@ describe('checkout and orders', () => {
     expect(q.items).toHaveLength(2);
   });
 
+  it('refuses to quote an empty cart', async () => {
+    const res = await api().post('/api/checkout/quote').set(buyer.auth).send({ shippingAddress: address });
+    expect(res.status).toBe(422);
+  });
+
   it('places an order: charges, decrements stock, empties the cart and notifies everyone', async () => {
     await fillCart();
     const q = await quote();
