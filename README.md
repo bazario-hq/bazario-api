@@ -8,7 +8,7 @@ The Node/Express API behind the Bazario marketplace: buyers browse, review and o
 - PostgreSQL 17 via `pg` + [Kysely](https://kysely.dev) (query builder, SQL stays visible)
 - Zod for validation; the OpenAPI spec is generated from the same schemas
 - JWT access tokens + rotating refresh tokens, bcrypt password hashes
-- MinIO / S3 for product images (resized with sharp)
+- S3-compatible object storage (SeaweedFS in bazario-infra) for product images, resized with sharp
 - pino for structured logs, prom-client for `/metrics`
 - Vitest + Supertest; integration tests run against a real Postgres
 
@@ -34,7 +34,7 @@ tests/
 
 ## Running locally
 
-The full environment (Postgres, MinIO, Mailpit, monitoring) lives in [`bazario-infra`](https://github.com/bazario-hq/bazario-infra):
+The full environment (Postgres, SeaweedFS, Mailpit, monitoring) lives in [`bazario-infra`](https://github.com/bazario-hq/bazario-infra):
 
 ```sh
 cd ../bazario-infra
