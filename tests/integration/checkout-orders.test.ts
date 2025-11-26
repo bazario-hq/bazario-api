@@ -81,6 +81,19 @@ describe('checkout and orders', () => {
     expect(notified.map((n) => n.user_id).sort()).toEqual([sellerA.user.id, sellerB.user.id].sort());
   });
 
+  it('does not place the order when the card is declined', async () => {
+    await fillCart();
+    const q = await quote();
+    const res = await api()
+      .post('/api/checkout/confirm')
+      .set(buyer.auth)
+      .send({ quoteId: q.quoteId, payment: { ...goodCard, cardNumber: '4000 0000 0000 0002' } });
+    expect(res.status).toBe(402);
+    expect(await stockOf(lamp.id)).toEqual({ stock: 5, sales_count: 0 });
+    expect(await db.selectFrom('orders').selectAll().execute()).toHaveLength(0);
+    expect((await api().get('/api/cart').set(buyer.auth)).body.items).toHaveLength(2);
+  });
+
   it('asks the buyer to review the cart when a price changed after quoting', async () => {
     await fillCart();
     const q = await quote();
