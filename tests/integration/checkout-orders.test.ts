@@ -52,6 +52,14 @@ describe('checkout and orders', () => {
     expect(res.status).toBe(422);
   });
 
+  it('refuses to quote when an item is out of stock', async () => {
+    await fillCart();
+    await db.updateTable('products').set({ stock: 1 }).where('id', '=', lamp.id).execute();
+    const res = await api().post('/api/checkout/quote').set(buyer.auth).send({ shippingAddress: address });
+    expect(res.status).toBe(422);
+    expect(res.body.error.details).toEqual([{ productId: lamp.id, name: 'Lamp', available: 1 }]);
+  });
+
   it('places an order: charges, decrements stock, empties the cart and notifies everyone', async () => {
     await fillCart();
     const q = await quote();
