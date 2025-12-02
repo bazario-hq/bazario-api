@@ -43,6 +43,10 @@ describe('wishlist and cart', () => {
       expect((await api().put(`/api/wishlist/${draft.id}`).set(buyer.auth)).status).toBe(404);
       expect((await api().put('/api/wishlist/424242').set(buyer.auth)).status).toBe(404);
     });
+
+    it('requires authentication', async () => {
+      expect((await api().get('/api/wishlist')).status).toBe(401);
+    });
   });
 
   describe('cart', () => {
