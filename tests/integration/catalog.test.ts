@@ -133,6 +133,18 @@ describe('catalog', () => {
       expect(await ids('popular')).toEqual([c.id, a.id, b.id]);
     });
 
+    it('paginates', async () => {
+      for (let i = 0; i < 5; i++) await createProduct(seller.seller.id, shoes.id);
+      const page1 = await api().get('/api/products').query({ pageSize: 2, page: 1 });
+      const page3 = await api().get('/api/products').query({ pageSize: 2, page: 3 });
+      expect(page1.body.meta).toEqual({ page: 1, pageSize: 2, total: 5, totalPages: 3 });
+      expect(page1.body.items).toHaveLength(2);
+      expect(page3.body.items).toHaveLength(1);
+
+      const tooBig = await api().get('/api/products').query({ pageSize: 500 });
+      expect(tooBig.status).toBe(400);
+    });
+
     it('returns category facets for the current filters', async () => {
       await createProduct(seller.seller.id, shoes.id, { name: 'Red shoe' });
       await createProduct(seller.seller.id, shoes.id, { name: 'Red boot' });
