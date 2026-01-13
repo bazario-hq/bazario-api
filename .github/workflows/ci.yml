@@ -83,3 +83,18 @@ jobs:
           name: openapi-${{ github.sha }}
           path: openapi.json
           retention-days: 30
+
+  image:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: prod
+          push: false
+          tags: bazario-api:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
