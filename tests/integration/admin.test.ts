@@ -16,6 +16,20 @@ describe('admin', () => {
   useTestDb();
 
   describe('users', () => {
+    it('searches users by email or name and filters by role', async () => {
+      const admin = await createAdmin();
+      await createUser({ email: 'priya@example.test', name: 'Priya R' });
+      await createUser({ email: 'someone@example.test', name: 'Priyanka S' });
+      await createUser({ email: 'other@example.test', name: 'Other' });
+
+      const res = await api().get('/api/admin/users').query({ q: 'priya' }).set(admin.auth);
+      expect(res.status).toBe(200);
+      expect(res.body.items.map((u: { email: string }) => u.email).sort()).toEqual(['priya@example.test', 'someone@example.test']);
+
+      const admins = await api().get('/api/admin/users').query({ role: 'admin' }).set(admin.auth);
+      expect(admins.body.items.map((u: { id: number }) => u.id)).toEqual([admin.id]);
+    });
+
     it('pages through users newest first', async () => {
       const admin = await createAdmin();
       for (let i = 0; i < 30; i++) {
