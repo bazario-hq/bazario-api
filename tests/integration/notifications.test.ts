@@ -39,4 +39,11 @@ describe('notifications', () => {
     expect(all.body).toEqual({ updated: 2 });
     expect((await api().get('/api/notifications/unread-count').set(user.auth)).body.count).toBe(0);
   });
+
+  it("cannot touch another user's notifications", async () => {
+    const other = await createUser();
+    const list = await api().get('/api/notifications').set(user.auth);
+    expect((await api().post(`/api/notifications/${list.body.items[0].id}/read`).set(other.auth)).status).toBe(404);
+    expect((await api().get('/api/notifications').set(other.auth)).body.items).toEqual([]);
+  });
 });
