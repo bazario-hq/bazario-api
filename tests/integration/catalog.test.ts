@@ -196,6 +196,17 @@ describe('catalog', () => {
       const res = await api().get(`/api/products/${product.id}`).set(user.auth);
       expect(res.body.inWishlist).toBe(true);
     });
+
+    it('404s for drafts, archived products and unknown ids', async () => {
+      const cat = await createCategory();
+      const { seller } = await createSeller();
+      const draft = await createProduct(seller.id, cat.id, { status: 'draft' });
+      const archived = await createProduct(seller.id, cat.id, { status: 'archived' });
+      expect((await api().get(`/api/products/${draft.id}`)).status).toBe(404);
+      expect((await api().get(`/api/products/${archived.id}`)).status).toBe(404);
+      expect((await api().get('/api/products/999999')).status).toBe(404);
+      expect((await api().get('/api/products/abc')).status).toBe(400);
+    });
   });
 
   describe('home page', () => {
