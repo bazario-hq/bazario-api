@@ -32,6 +32,15 @@ describe('seller area', () => {
   });
 
   describe('access', () => {
+    it('requires an active seller account', async () => {
+      const buyer = await createUser();
+      const pending = await createSeller({ status: 'pending' });
+      expect((await api().get('/api/seller/products')).status).toBe(401);
+      expect((await api().get('/api/seller/products').set(buyer.auth)).status).toBe(403);
+      expect((await api().get('/api/seller/products').set(pending.user.auth)).status).toBe(403);
+      expect((await api().get('/api/seller/products').set(seller.user.auth)).status).toBe(200);
+    });
+
     it('updates the seller profile', async () => {
       const res = await api()
         .patch('/api/seller/profile')
