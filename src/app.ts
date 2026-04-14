@@ -23,7 +23,7 @@ export function createApp() {
   app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
   app.use(
     cors({
-      origin: [config.WEB_URL],
+      origin: config.CORS_ORIGINS ? config.CORS_ORIGINS.split(',') : [config.WEB_URL],
       credentials: true,
     }),
   );

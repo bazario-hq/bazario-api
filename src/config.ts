@@ -32,6 +32,7 @@ const schema = z.object({
   MAIL_FROM: z.string().default('Bazario <no-reply@bazario.example>'),
 
   WEB_URL: z.string().default('http://localhost:5173'),
+  CORS_ORIGINS: z.string().optional(),
 
   PAYMENT_LATENCY_MS: z.coerce.number().default(250),
   PLATFORM_FEE_PERCENT: z.coerce.number().default(10),
