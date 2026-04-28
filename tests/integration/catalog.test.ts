@@ -36,6 +36,20 @@ describe('catalog', () => {
       expect(names).toEqual(['Fashion', 'Home']);
       expect(res.body.categories[0].children[0].children[0].slug).toBe('sneakers');
     });
+
+    it('returns a category with breadcrumb and children', async () => {
+      const fashion = await createCategory({ name: 'Fashion', slug: 'fashion' });
+      const shoes = await createCategory({ name: 'Shoes', slug: 'shoes', parentId: fashion.id });
+      await createCategory({ name: 'Sneakers', slug: 'sneakers', parentId: shoes.id });
+
+      const res = await api().get('/api/categories/shoes');
+      expect(res.status).toBe(200);
+      expectSchema(CategoryDetail, res.body);
+      expect(res.body.breadcrumb.map((c: { slug: string }) => c.slug)).toEqual(['fashion', 'shoes']);
+      expect(res.body.children.map((c: { slug: string }) => c.slug)).toEqual(['sneakers']);
+
+      expect((await api().get('/api/categories/unknown')).status).toBe(404);
+    });
   });
 
   describe('product search', () => {
