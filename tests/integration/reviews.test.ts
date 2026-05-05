@@ -27,6 +27,10 @@ describe('reviews', () => {
       const res = await api().get(`/api/products/${product.id}/reviews`);
       expect(res.body.items[0].body).toBe('Nice lamp. Even cheaper on ********!');
     });
+
+    it('404s for unknown products', async () => {
+      expect((await api().get('/api/products/987654/reviews')).status).toBe(404);
+    });
   });
 
   describe('writing', () => {
