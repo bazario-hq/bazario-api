@@ -101,6 +101,11 @@ describe('auth', () => {
       const res = await api().post('/api/auth/refresh').send({ refreshToken: login.body.refreshToken });
       expect(res.status).toBe(401);
     });
+
+    it('rejects an unknown refresh token', async () => {
+      const res = await api().post('/api/auth/refresh').send({ refreshToken: 'definitely-not-a-real-token' });
+      expect(res.status).toBe(401);
+    });
   });
 
   describe('profile', () => {
