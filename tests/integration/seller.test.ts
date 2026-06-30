@@ -158,6 +158,14 @@ describe('seller area', () => {
   });
 
   describe('inventory', () => {
+    it('lists stock lowest first and filters low stock', async () => {
+      await createProduct(seller.seller.id, categoryId, { stock: 50 });
+      const low = await createProduct(seller.seller.id, categoryId, { stock: 2 });
+      const res = await api().get('/api/seller/inventory').set(seller.user.auth);
+      expect(res.body.items.map((i: { productId: number }) => i.productId)[0]).toBe(low.id);
+      const lowOnly = await api().get('/api/seller/inventory').query({ lowStock: 'true' }).set(seller.user.auth);
+      expect(lowOnly.body.items.map((i: { productId: number }) => i.productId)).toEqual([low.id]);
+    });
   });
 
   describe('orders', () => {
