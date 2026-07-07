@@ -5,6 +5,7 @@ import { HttpError } from './errors.js';
 
 // Mock payment provider. Behaves like a hosted card API: one network round trip
 // per call, test card numbers decide the outcome.
+// TODO(BZR-402): swap for the real provider SDK once the contract is signed.
 export const DECLINED_CARD = '4000000000000002';
 
 export interface CardDetails {
