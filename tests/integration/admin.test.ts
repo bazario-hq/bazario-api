@@ -15,6 +15,14 @@ import {
 describe('admin', () => {
   useTestDb();
 
+  it('is only available to admins', async () => {
+    const buyer = await createUser();
+    const { user: seller } = await createSeller();
+    expect((await api().get('/api/admin/users').set(buyer.auth)).status).toBe(403);
+    expect((await api().get('/api/admin/users').set(seller.auth)).status).toBe(403);
+    expect((await api().get('/api/admin/users')).status).toBe(401);
+  });
+
   describe('users', () => {
     it('searches users by email or name and filters by role', async () => {
       const admin = await createAdmin();
