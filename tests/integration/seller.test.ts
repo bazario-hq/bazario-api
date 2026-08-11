@@ -166,6 +166,28 @@ describe('seller area', () => {
       const lowOnly = await api().get('/api/seller/inventory').query({ lowStock: 'true' }).set(seller.user.auth);
       expect(lowOnly.body.items.map((i: { productId: number }) => i.productId)).toEqual([low.id]);
     });
+
+    it('sets stock in bulk and records adjustments', async () => {
+      const a = await createProduct(seller.seller.id, categoryId, { stock: 5 });
+      const b = await createProduct(seller.seller.id, categoryId, { stock: 7 });
+      const res = await api()
+        .post('/api/seller/inventory/bulk')
+        .set(seller.user.auth)
+        .send({ items: [{ productId: a.id, stock: 20 }, { productId: b.id, stock: 7 }], reason: 'stock take' });
+      expect(res.status).toBe(200);
+      expect(res.body).toEqual({
+        updated: 2,
+        items: [
+          { productId: a.id, previousStock: 5, stock: 20 },
+          { productId: b.id, previousStock: 7, stock: 7 },
+        ],
+      });
+
+      const history = await api().get(`/api/seller/inventory/${a.id}/history`).set(seller.user.auth);
+      expect(history.body.items).toEqual([expect.objectContaining({ delta: 15, stockAfter: 20, reason: 'stock take' })]);
+      const unchanged = await api().get(`/api/seller/inventory/${b.id}/history`).set(seller.user.auth);
+      expect(unchanged.body.items).toEqual([]);
+    });
   });
 
   describe('orders', () => {
