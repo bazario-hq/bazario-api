@@ -33,6 +33,15 @@ describe('auth', () => {
       expect(res.status).toBe(409);
     });
 
+    it('validates input', async () => {
+      const res = await api().post('/api/auth/signup').send({ email: 'not-an-email', password: 'short', name: '' });
+      expect(res.status).toBe(400);
+      expect(res.body.error.code).toBe('bad_request');
+      expect(Object.keys(res.body.error.details.fieldErrors)).toEqual(
+        expect.arrayContaining(['email', 'password', 'name']),
+      );
+    });
+
     it('does not store the plain password', async () => {
       await api().post('/api/auth/signup').send({ email: 'hash@example.test', password: 'long-enough-pw', name: 'H' });
       const row = await db.selectFrom('users').select('password_hash').where('email', '=', 'hash@example.test').executeTakeFirstOrThrow();
