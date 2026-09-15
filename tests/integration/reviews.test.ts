@@ -21,6 +21,26 @@ describe('reviews', () => {
     db.selectFrom('products').select(['rating_avg', 'rating_count']).where('id', '=', product.id).executeTakeFirstOrThrow();
 
   describe('listing', () => {
+    it('lists published reviews newest first with authors', async () => {
+      const u1 = await createUser({ name: 'Nimal' });
+      const u2 = await createUser({ name: 'Shalini' });
+      const u3 = await createUser();
+      await createReview(product.id, u1.id, 5, { createdAt: new Date('2026-01-01') });
+      await createReview(product.id, u2.id, 2, { createdAt: new Date('2026-02-01') });
+      await createReview(product.id, u3.id, 1, { status: 'pending' });
+
+      const res = await api().get(`/api/products/${product.id}/reviews`);
+      expect(res.status).toBe(200);
+      expectSchema(ReviewList, res.body);
+      expect(res.body.items.map((r: { author: { name: string } }) => r.author.name)).toEqual(['Shalini', 'Nimal']);
+      expect(res.body.meta.total).toBe(2);
+
+      const highest = await api().get(`/api/products/${product.id}/reviews`).query({ sort: 'highest' });
+      expect(highest.body.items.map((r: { rating: number }) => r.rating)).toEqual([5, 2]);
+      const lowest = await api().get(`/api/products/${product.id}/reviews`).query({ sort: 'lowest' });
+      expect(lowest.body.items.map((r: { rating: number }) => r.rating)).toEqual([2, 5]);
+    });
+
     it('masks off-platform contact details in older reviews', async () => {
       const u = await createUser();
       await createReview(product.id, u.id, 4, { body: 'Nice lamp. Even cheaper on WhatsApp!' });
