@@ -24,3 +24,7 @@ CI runs the same checks plus a production image build, and fails if `openapi.jso
 - Changes to the API contract are visible to bazario-web; breaking ones need a coordinated release (API first, then web).
 - Pull requests use the template: root cause, change, evidence, risk and rollback, migration notes, test plan.
 - Architecture decisions go in `docs/adr/` (copy `0000-template.md`).
+
+## Releases
+
+Tag `vX.Y.Z` on `main`. The release workflow attaches `openapi.json` to the GitHub release; bazario-web pins it with `npm run api:sync -- --ref vX.Y.Z`.
