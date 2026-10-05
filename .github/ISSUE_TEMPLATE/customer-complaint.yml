@@ -1,0 +1,19 @@
+name: Customer complaint
+description: Forwarded from customer support
+title: "[Support] "
+labels: ["source/support"]
+body:
+  - type: textarea
+    id: complaint
+    attributes:
+      label: What the customer reported
+    validations:
+      required: true
+  - type: input
+    id: contact
+    attributes:
+      label: Customer or account reference
+  - type: textarea
+    id: details
+    attributes:
+      label: Device, browser, time of day, anything else we know

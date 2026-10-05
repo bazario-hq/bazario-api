@@ -1,0 +1,19 @@
+name: UAT feedback
+description: Feedback from user acceptance testing
+title: "[UAT] "
+labels: ["source/uat"]
+body:
+  - type: textarea
+    id: feedback
+    attributes:
+      label: What did you try and what happened?
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact on your work
+  - type: input
+    id: ticket
+    attributes:
+      label: Related ticket (BZR-xxx)

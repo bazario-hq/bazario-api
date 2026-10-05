@@ -1,0 +1,20 @@
+name: Tech debt
+description: Cleanup, upgrades and refactors
+title: "[Debt] "
+labels: ["type/tech-debt"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: What needs cleaning up?
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why now?
+  - type: dropdown
+    id: effort
+    attributes:
+      label: Rough size
+      options: [small, medium, large]

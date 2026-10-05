@@ -1,0 +1,23 @@
+name: Incident
+description: Production is degraded or down
+title: "[Incident] "
+labels: ["type/incident", "source/alert"]
+body:
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact
+    validations:
+      required: true
+  - type: input
+    id: started
+    attributes:
+      label: Started at (with time zone)
+  - type: textarea
+    id: alerts
+    attributes:
+      label: Alerts and dashboards
+  - type: textarea
+    id: mitigation
+    attributes:
+      label: Mitigation so far

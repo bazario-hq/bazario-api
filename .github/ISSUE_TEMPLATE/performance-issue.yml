@@ -1,0 +1,25 @@
+name: Performance issue
+description: Something is slower than it should be
+title: "[Perf] "
+labels: ["type/perf"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: What is slow?
+    validations:
+      required: true
+  - type: textarea
+    id: measurements
+    attributes:
+      label: Measurements
+      description: Timings, dashboards, profiles, query plans, bundle sizes.
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment
+      options: [dev, staging, prod-sim]
+  - type: textarea
+    id: target
+    attributes:
+      label: Target or SLO this misses
